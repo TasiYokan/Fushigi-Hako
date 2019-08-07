@@ -138,7 +138,7 @@
 <meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/raindrops/8.9_different_scale_stretch.png">
 <meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/raindrops/8.6_uneven_stretch.gif">
 <meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/raindrops/8.7_more_detailed_illustrate.png">
-<meta property="og:updated_time" content="2019-08-06T15:10:36.396Z">
+<meta property="og:updated_time" content="2019-08-06T15:39:33.085Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="制作不使用贴图的水滴特效">
 <meta name="twitter:description" content="简介  在本文中，将会参考youtube上的一篇关于制作滴水特效的视频[1]完整的制作一个滴水的玻璃板。当然同样的技术也可以运用到post-processing中。基本的思路是将屏幕分割成小块，对于每一个小块绘制一格水滴，对它添加关于时间的偏移函数和抖动，然后再将模式复制到其他的格子中。通过加入随机性让水滴的生成时间和位置产生变化，从而模拟大量的水滴。">
@@ -535,11 +535,9 @@
 <p>我们可以得到<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/raindrops/8.6_contour_lines.png" alt="" title=""><br>这幅图中，在任意时刻（对于某个x），每条线之间的距离不同，如果曲线之间的间隔比较小，说明亮度比较集中，水滴较小，反之亦反。如果上下限差的比较多则说明当前tile的上下边界分割的比较远。<br>当乘以不同的偏移缩放系数的时候，我们可以看到不同程度的非均匀拉升<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/raindrops/8.9_different_scale_stretch.png" alt="" title="可以看到当系数越小的时候，越接近均匀分布，而越大的时候，拉伸的规律就越不定。我们需要找到一个平衡的位置，可以让拉伸幅度尽可能长时间的存在"></p>
 <p>如果我们把每个tile的边界画出来，会发现的伸缩规律，中间的水滴因为被非均匀的拉升了，所以会有拉扯的感觉<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/raindrops/8.6_uneven_stretch.gif" alt="" title="非均匀的小水滴间隔"><br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/raindrops/8.7_more_detailed_illustrate.png" alt="" title="这张图为高度线加了渐变，所以能更清楚的看到非均匀的拉扯"></p>
 <p>后来我想出一种方法，<br>这样就给了水滴原始的方程加了一个非均匀的相位偏移</p>
-<div align="center"><br><video width="100%" height="400" src="/videos/raindrops/raindrop_base_shape_move.mp4" controls="controls"> The`<video>` tag is not supported by your browser. </video><br>水滴背后的绘制过程<br></video></div>
+<div align="left"><br>水滴背后的绘制过程<br><video width="100%" height="400" src="/videos/raindrops/raindrop_base_shape_move.mp4" controls="controls"> The`<video>` tag is not supported by your browser. </video><br></video></div>
 
-<div align="center"><br><video width="100%" height="400" src="/videos/raindrops/9_test_video.mp4" controls="controls"> The`<video>` tag is not supported by your browser. </video><br>最终的效果4<br></video></div>
-
-
+<p><div align="left"><br>最终的效果<br><video width="100%" height="400" src="/videos/raindrops/9_test_video.mp4" controls="controls"> The`<video>` tag is not supported by your browser. </video></video></div></p>
 <p><span id="ref"></span></p>
 <h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="https://www.youtube.com/watch?v=EBrAdahFtuo" target="_blank" rel="external">[1] Making a rainy window in Unity - Part 1</a><br><a href="https://docs.unity3d.com/Manual/SL-GrabPass.html" target="_blank" rel="external">[2] ShaderLab: GrabPass</a></p>
 
