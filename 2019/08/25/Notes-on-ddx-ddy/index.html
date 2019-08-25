@@ -77,7 +77,7 @@
 <link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="graphics,shader," />
 
 
 
@@ -93,12 +93,21 @@
 
 
 
-<meta property="og:type" content="website">
-<meta property="og:title" content="不思議な箱">
-<meta property="og:url" content="http://yoursite.com/archives/2017/index.html">
+<meta name="description" content="定义ddx/ddy用于返回屏幕空间中某一值关于x,y方向上的偏导数。它只可以用于fragment program中，参数必须来自fragment的输入。HLSL对ddx的定义：Returns the partial derivative of the specified value with respect to the screen-space x-coordinate.GLSL中对应的函数为d">
+<meta name="keywords" content="graphics,shader">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Notes on ddx&#x2F;ddy">
+<meta property="og:url" content="http://yoursite.com/2019/08/25/Notes-on-ddx-ddy/index.html">
 <meta property="og:site_name" content="不思議な箱">
+<meta property="og:description" content="定义ddx/ddy用于返回屏幕空间中某一值关于x,y方向上的偏导数。它只可以用于fragment program中，参数必须来自fragment的输入。HLSL对ddx的定义：Returns the partial derivative of the specified value with respect to the screen-space x-coordinate.GLSL中对应的函数为d">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/ddx/mipmap_lod.png">
+<meta property="og:image" content="https://i.stack.imgur.com/VJEqW.png">
+<meta property="og:image" content="http://album.sina.com.cn/pic/002hBfPnzy7dvLft6NX99">
+<meta property="og:updated_time" content="2019-08-25T11:24:43.779Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="不思議な箱">
+<meta name="twitter:title" content="Notes on ddx&#x2F;ddy">
+<meta name="twitter:description" content="定义ddx/ddy用于返回屏幕空间中某一值关于x,y方向上的偏导数。它只可以用于fragment program中，参数必须来自fragment的输入。HLSL对ddx的定义：Returns the partial derivative of the specified value with respect to the screen-space x-coordinate.GLSL中对应的函数为d">
+<meta name="twitter:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/ddx/mipmap_lod.png">
 
 
 
@@ -126,13 +135,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/archives/2017/"/>
+  <link rel="canonical" href="http://yoursite.com/2019/08/25/Notes-on-ddx-ddy/"/>
 
 
 
 
 
-  <title>归档 | 不思議な箱</title>
+  <title>Notes on ddx/ddy | 不思議な箱</title>
   
 
 
@@ -157,7 +166,7 @@
     
   
 
-  <div class="container sidebar-position-right  page-archive  ">
+  <div class="container sidebar-position-right page-post-detail ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -334,105 +343,195 @@
           <div id="content" class="content">
             
 
-  <div class="post-general-bg">
-  <section id="posts" class="posts-collapse">
-    <span class="archive-move-on"></span>
-
-    <span class="archive-page-counter">
-      
-      
-      
-        
-      
-      嗯..! 目前共计 4 篇日志。 继续努力。
-    </span>
-
+  <div id="posts" class="posts-expand">
     
-
-      
-      
-      
-
-      
-        
-        <div class="collection-title">
-          <h2 class="archive-year motion-element" id="archive-year-2017">2017</h2>
-        </div>
-      
-      
-
-      
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2017/07/03/from_pixel_to_screen_2/" itemprop="url">
-              
-                <span itemprop="name">从像素之间谈起：像素游戏的画面增强（下）</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2017-07-03T11:34:14+08:00"
-              content="2017-07-03" >
-          07-03
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
-    
-
-      
-      
-      
-
-      
-      
-
-      
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2017/07/02/from_pixel_to_screen_1/" itemprop="url">
-              
-                <span itemprop="name">从像素之间谈起：像素游戏的画面增强（上）</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2017-07-02T19:34:14+08:00"
-              content="2017-07-02" >
-          07-02
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
-    
-    
-  </section>
-  </div>
 
   
 
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <div class="post-inner">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/25/Notes-on-ddx-ddy/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="tasiYokan">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="不思議な箱">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Notes on ddx/ddy</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-08-25T19:24:30+08:00">
+                2019-08-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Theory/" itemprop="url" rel="index">
+                    <span itemprop="name">Theory</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon">
+              <i class="fa fa-eye"></i>
+            </span>
+            
+              <span class="post-meta-item-text">浏览量</span>
+            
+            <span class="page-pv">
+              <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h1><p>ddx/ddy用于返回屏幕空间中某一值关于x,y方向上的偏导数。它只可以用于fragment program中，参数必须来自fragment的输入。<br>HLSL对<a href="https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-ddx" target="_blank" rel="external">ddx的定义</a>：Returns the partial derivative of the specified value with respect to the screen-space x-coordinate.<br>GLSL中对应的函数为<a href="https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/dFdx.xhtml" target="_blank" rel="external">dFdx/dFdy</a></p>
+<a id="more"></a>
+<h1 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h1><p>在triangle rasterization阶段，GPU会对多个像素实例同时运行fragment shader。在最细的程度上，它将会通过SIMD同时跑32-64个像素（实例）。在这些像素中，又会被划分成2 * 2的小组（又被称为quad-fragments），所以每个组会有四个相邻的像素，这样SIMD指令就能同时处理屏幕上2 * 2 = 4个像素了。</p>
+<p>每个像素中的值都来自于vertex program或其他步骤输出之后得到的插值，所以对于这些值来说，在进入到fragment shader之前就完成了计算，这些是可以并行计算得到的。所以在fragment shader中运行ddx(vertexOuput)的时候，就能知道这个插值的变化导数。</p>
+<h1 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h1><h2 id="1-计算Lod或各向异性-Anisotropy"><a href="#1-计算Lod或各向异性-Anisotropy" class="headerlink" title="1.计算Lod或各向异性(Anisotropy)"></a>1.计算Lod或各向异性(Anisotropy)</h2><p>因为mipmap level需要计算fragmentInput.uv的导数，即相邻像素之间对应纹素的差距。过程是将屏幕坐标的点映射到uv平面上，然后计算出距离。取出最大的一个距离L，并做log_2⁡L。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/ddx/mipmap_lod.png" alt="" title="计算mipmap level图示，来源：[5]"><br>其含义就是如果uv平面中采样点很稀，相应的du/dx或其他的值就比较大，L也相应的比较大。这种情况说明Minification了，很多纹素就堆在了一个像素里。我们实际上用不到这么多纹素，于是一个很高级别的mipmap(更模糊的）就可以用来节省渲染的负担，也可以避免出现锯齿。<br><img src="https://i.stack.imgur.com/VJEqW.png" alt="" title="计算uv的偏导的图示，来源：[1]"></p>
+<h2 id="2-计算面法线"><a href="#2-计算面法线" class="headerlink" title="2.计算面法线"></a>2.计算面法线</h2><p>在 FragShader 中，调用<code>ddx(i.position)</code>, 和<code>ddy(i.position)</code>可以求出相邻的2 个像素之间座标的差值，即两个像素在三角面上采样的点所构成的向量。下面图中的红色和绿色2个向量即为ddx,ddy所返回的向量<br><img src="http://album.sina.com.cn/pic/002hBfPnzy7dvLft6NX99" alt="" title="来源：[2]"></p>
+<p>而这2 个向量都在这个三角形的平面上，那么<br><code>normal = normalize(cross(ddx(pos), ddy(pos)))</code><br>就可以求出的面的法线，但是这里要注意，在 HLSL 或者Unity shader里要写成normalize(cross(ddy(pos), ddx(pos))) , 不然法线是反向的。这个是由于左右手座标系引起的。</p>
+<h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><p>嵌套使用ddx(p)或ddy(p)可能导致undefine的值，如ddx(ddx(p))或ddx(ddy(p))。<br>同时，程序假设参数p是连续的。对于嵌在flow-control代码段的值，因为不是每一个在quad-fragment中的片段都会执行同样的branch，所以结果也是undefine的<br>ddx/ddy分为coarse版本和fine版本。如果直接使用ddx，等价于ddx_coarse（可以看做alias).<br><a href="https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/ddx-coarse" target="_blank" rel="external">ddx_coarse</a>和<a href="https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/ddx-fine" target="_blank" rel="external">ddx_fine</a>对于同一组2*2的quad-fragment的四个像素，他们的偏导数都将会是一样。这两个函数需要Shader Model 5的支持<a href="#ref">[4]</a></p>
+<p>其他相关函数：<code><a href="https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-fwidth" target="_blank" rel="external">fwidth(p)</a> = abs(ddx(p)) + abs(ddy(p))</code></p>
+<p><span id="ref"></span></p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="https://gamedev.stackexchange.com/a/130933" target="_blank" rel="external">[1] What are screen space derivatives and when would I use them?</a><br><a href="http://www.aclockworkberry.com/shader-derivative-functions" target="_blank" rel="external">[2] An introduction to shader derivative functions | A Clockwork Berry</a><br><a href="https://gamedev.stackexchange.com/a/62650" target="_blank" rel="external">[3] What does ddx (hlsl) actually do?</a><br><a href="https://fgiesen.wordpress.com/2011/07/10/a-trip-through-the-graphics-pipeline-2011-part-8/#comment-1990" target="_blank" rel="external">[4] A trip through the Graphics Pipeline 2011, part 8</a><br><a href="http://15462.courses.cs.cmu.edu/spring2018/lecture/persp/slide_055" target="_blank" rel="external">[5] CMU 15462 Lecture 7: PerspectiveTexture</a><br><a href="https://catlikecoding.com/unity/tutorials/advanced-rendering/flat-and-wireframe-shading/" target="_blank" rel="external">[6] Flat and Wireframe Shading Derivatives and Geometry</a><br><a href="https://anteru.net/blog/2018/more-compute-shaders/" target="_blank" rel="external">[7] More compute shaders</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/graphics/" rel="tag"># graphics</a>
+          
+            <a href="/tags/shader/" rel="tag"># shader</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/07/31/raindrop-effect/" rel="next" title="制作不使用贴图的水滴特效">
+                <i class="fa fa-chevron-left"></i> 制作不使用贴图的水滴特效
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+    </div>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
 
 
           </div>
@@ -440,17 +539,129 @@
 
 
           
+  <div class="comments" id="comments">
+    
+  </div>
+
 
         </div>
         
           
   
 
-  <!--<aside id="sidebar" class="sidebar sidebar-hide">
-    <div class="sidebar-inner">
-      <p> Some lists maybe </p>
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
     </div>
-  </aside>-->
+  </div>
+
+  
+  <aside id="sidebar" class="sidebar sidebar-hide">
+    
+      <div id="sidebar-dimmer"></div>
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <!--<li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>-->
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.png"
+               alt="tasiYokan" />
+          <p class="site-author-name" itemprop="name">tasiYokan</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#定义"><span class="nav-number">1.</span> <span class="nav-text">定义</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#实现原理"><span class="nav-number">2.</span> <span class="nav-text">实现原理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#应用"><span class="nav-number">3.</span> <span class="nav-text">应用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-计算Lod或各向异性-Anisotropy"><span class="nav-number">3.1.</span> <span class="nav-text">1.计算Lod或各向异性(Anisotropy)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-计算面法线"><span class="nav-number">3.2.</span> <span class="nav-text">2.计算面法线</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#注意事项"><span class="nav-number">4.</span> <span class="nav-text">注意事项</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
 
 
 
@@ -501,6 +712,11 @@
         
       </div>
       
+  <div class="expand-toc">
+    <i class="fa fa-list-ol"></i>
+    
+  </div>
+
     
 
   </div>
@@ -573,11 +789,9 @@
 
 
   
-  
-    <script type="text/javascript" id="motion.page.archive">
-      $('.archive-year').velocity('transition.slideLeftIn');
-    </script>
-  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
 
 
   
