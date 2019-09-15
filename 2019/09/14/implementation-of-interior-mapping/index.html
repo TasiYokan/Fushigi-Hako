@@ -1,0 +1,1177 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="基本思路的实现按照论文中的思路实现即可。只不过有几点缺陷：1.墙面还没有厚度，虽然可以手动加一个外墙的mask但是无法自动生成。2.没有加上sprite层（家具层）3.在拐角处会看到不应该看到的墙面">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Interior-Mapping的实现">
+<meta property="og:url" content="http://yoursite.com/2019/09/14/implementation-of-interior-mapping/index.html">
+<meta property="og:site_name" content="不思議な箱">
+<meta property="og:description" content="基本思路的实现按照论文中的思路实现即可。只不过有几点缺陷：1.墙面还没有厚度，虽然可以手动加一个外墙的mask但是无法自动生成。2.没有加上sprite层（家具层）3.在拐角处会看到不应该看到的墙面">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/local_image_root/imp-interior-mapping/2.1_wrong_wall.png">
+<meta property="og:image" content="http://yoursite.com/local_image_root/imp-interior-mapping/2.2_xy_bool_mask.png">
+<meta property="og:image" content="http://yoursite.com/local_image_root/imp-interior-mapping/2.3_all_bool_mask.png">
+<meta property="og:image" content="http://yoursite.com/local_image_root/imp-interior-mapping/2.4_correct_wall.png">
+<meta property="og:image" content="http://yoursite.com/local_image_root/imp-interior-mapping/2.5_wrong_sphere.png">
+<meta property="og:image" content="http://yoursite.com/local_image_root/imp-interior-mapping/2.6_wrong_sphere_mask.png">
+<meta property="og:image" content="http://yoursite.com/local_image_root/imp-interior-mapping/2.7_wrong_sphere_mask_top.png">
+<meta property="og:image" content="http://yoursite.com/local_image_root/imp-interior-mapping/2.8_correct_sphere_mask.png">
+<meta property="og:image" content="http://yoursite.com/local_image_root/imp-interior-mapping/2.9_potential_visual_bug.png">
+<meta property="og:image" content="http://yoursite.com/local_image_root/G10">
+<meta property="og:image" content="http://yoursite.com/local_image_root/10">
+<meta property="og:updated_time" content="2019-09-15T07:52:18.588Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Interior-Mapping的实现">
+<meta name="twitter:description" content="基本思路的实现按照论文中的思路实现即可。只不过有几点缺陷：1.墙面还没有厚度，虽然可以手动加一个外墙的mask但是无法自动生成。2.没有加上sprite层（家具层）3.在拐角处会看到不应该看到的墙面">
+<meta name="twitter:image" content="http://yoursite.com/local_image_root/imp-interior-mapping/2.1_wrong_wall.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"right","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false,"onmobile":true},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/09/14/implementation-of-interior-mapping/">
+
+
+
+
+
+  <title>Interior-Mapping的实现 | 不思議な箱</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">不思議な箱</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+        
+      
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+        
+      
+        
+        
+      
+      <!-- 
+      <li class="menu-item menu-item-home">
+        <a href="/" rel="section">
+          
+            <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+          
+          首页
+        </a>
+      </li> -->
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+
+  
+
+  <div class="site-author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" src="/images/avatar.png" alt="tasiYokan">
+    <p class="site-author-name" itemprop="name">tasiYokan</p>
+      
+        <p class="site-description motion-element" itemprop="description"></p>
+    
+  </div>
+
+  <nav class="site-state">
+    
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        <a href="/categories/index.html">
+          <span class="site-state-item-count">2</span>
+          <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        <a href="/tags/index.html">
+          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <p></p>
+
+  
+
+  
+
+
+</nav>
+
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <div class="post-inner">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/14/implementation-of-interior-mapping/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="tasiYokan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="不思議な箱">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Interior-Mapping的实现</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-09-14T22:28:30+08:00">
+                2019-09-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon">
+              <i class="fa fa-eye"></i>
+            </span>
+            
+              <span class="post-meta-item-text">浏览量</span>
+            
+            <span class="page-pv">
+              <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="基本思路的实现"><a href="#基本思路的实现" class="headerlink" title="基本思路的实现"></a>基本思路的实现</h1><p>按照论文中的思路实现即可。只不过有几点缺陷：1.墙面还没有厚度，虽然可以手动加一个外墙的mask但是无法自动生成。2.没有加上sprite层（家具层）3.在拐角处会看到不应该看到的墙面<br><a id="more"></a></p>
+<h1 id="可配置厚度墙面的实现"><a href="#可配置厚度墙面的实现" class="headerlink" title="可配置厚度墙面的实现"></a>可配置厚度墙面的实现</h1><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">float3 camObjPos = mul(unity_WorldToObject, float4(_WorldSpaceCameraPos, <span class="number">1.0</span>)).xyz;</span><br><span class="line">float3 direction = i.positionCopy - camObjPos; <span class="comment">//从摄像机出发的视线方向</span></span><br><span class="line">float3 stepDir = step(float3(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>), direction); <span class="comment">//如果是正向，则+1,如果是负向，则+0</span></span><br></pre></td></tr></table></figure>
+<p>原始的墙面界面位置为<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">floor</span>(i.positionCopy * <span class="number">0.999</span> / _d)  + stepDir</span><br></pre></td></tr></table></figure></p>
+<p>为了模拟墙面向内intrude，需要减去一个墙面的偏移量(stepDir - float3(0.5, 0.5, 0.5)) * _wallThickness 之后再计算相似三角形边的比<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">float3 ratio = ((<span class="built_in">floor</span>(i.positionCopy * <span class="number">0.999</span> / _d)  + stepDir - (stepDir - float3(<span class="number">0.5</span>, <span class="number">0.5</span>, <span class="number">0.5</span>)) * _wallThickness) * _d  - camObjPos) / direction;</span><br></pre></td></tr></table></figure></p>
+<p>不过如果只是加上了一个墙面的偏移量，那结果就如下图一样<br> <img src="/local_image_root/imp-interior-mapping/2.1_wrong_wall.png" alt title><br>造成视觉上的怪异的原因是对于墙面部分，我们俯视它时依然会“穿过”水平墙面看到内部的垂直墙面，而这些uv之外的部分实际不应该被看到。</p>
+<h2 id="判断像素是否在墙内"><a href="#判断像素是否在墙内" class="headerlink" title="判断像素是否在墙内"></a>判断像素是否在墙内</h2><p>找到问题之后，我们就需要找到每个block中，那些像素对应的是墙面上的位置。<br>首先利用floor可以找到每个block的中心位置。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">float3 floorId = <span class="built_in">floor</span>(i.vertexPos  * <span class="number">0.999</span> / _d);</span><br><span class="line">float3 centerPos = (floorId + <span class="number">0.5</span>) * _d;</span><br><span class="line">float3 offsetFromCenter = <span class="built_in">abs</span>(i.vertexPos - centerPos) / _d;</span><br></pre></td></tr></table></figure></p>
+<p>这里的centerPos在object space中，offsetFromCenter表示的是归一化后的偏移，即范围为[0,1]，代表偏移量占每个block的比例.</p>
+<p>至于如何判定一个点是否处在墙面里，一种方法是：<br>检测在某个平面上最远的坐标分量是否超出了内cube的半径，以xy平面为例<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">float</span> max_xy = max(offsetFromCenter.x, offsetFromCenter.y);</span><br><span class="line"><span class="keyword">float</span> mask = step((<span class="number">1</span> - _wallThickness) * <span class="number">0.5</span>, max_xy );</span><br></pre></td></tr></table></figure></p>
+ <img src="/local_image_root/imp-interior-mapping/2.2_xy_bool_mask.png" alt title>
+<p>同样的手法可以用到其他2个平面上，合起来就是<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">float</span> max_xy = max(offsetFromCenter.x, offsetFromCenter.y);</span><br><span class="line"><span class="keyword">float</span> mask = step((<span class="number">1</span> - _wallThickness) * <span class="number">0.5</span>, max_xy );</span><br><span class="line"><span class="keyword">float</span> max_xz = max(offsetFromCenter.x, offsetFromCenter.z);</span><br><span class="line">mask *= step((<span class="number">1</span> - _wallThickness) * <span class="number">0.5</span>, max_xz );</span><br><span class="line"><span class="keyword">float</span> max_yz = max(offsetFromCenter.y, offsetFromCenter.z);</span><br><span class="line">mask *= step((<span class="number">1</span> - _wallThickness) * <span class="number">0.5</span>, max_yz );</span><br></pre></td></tr></table></figure></p>
+ <img src="/local_image_root/imp-interior-mapping/2.3_all_bool_mask.png" alt title>
+<p>这里mask相当于是一个AND操作，只有在各个平面的投影中都属于“内部”中的像素才可以被称为真正的内腔，也就是会绘制墙面上的像素，这些像素的mask值为0.<br>这个过程可以想象成在三个正交的方向上对一个几何体做投影挖去不属于墙面的部分，最终剩下的白色部分就是我们所需要的墙面<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">float4 outerCol = tex2D(_outerWallTexture, i.uv);</span><br><span class="line">float4 finalCol = lerp(innerCol, outerCol, mask);</span><br></pre></td></tr></table></figure></p>
+<p>最终的效果如<br> <img src="/local_image_root/imp-interior-mapping/2.4_correct_wall.png" alt title></p>
+<h2 id="使用AND还是OR"><a href="#使用AND还是OR" class="headerlink" title="使用AND还是OR"></a>使用AND还是OR</h2><p>我们在进行投影bool运算的时候，实际上会将内部结构中的墙体一并减去。但由于我们实际上只需要最外层的mask值，所以对于立方体来说，这样的操作不会有什么问题。但是对于球体等不规则物体来说，由于我们会看到内部的结构，所以被错误减去的墙体将会出现视觉问题。<br> <img src="/local_image_root/imp-interior-mapping/2.5_wrong_sphere.png" alt title><br>如果将其mask输出，就能更容易的发现问题<br> <img src="/local_image_root/imp-interior-mapping/2.6_wrong_sphere_mask.png" alt title><br>本来是内部的墙面出现在了球面上，因为被不正确的减去了，所以本来应该有墙的地方一下子穿帮了.<br>可能从正交视图的某个平面方向上看更容易理解<br> <img src="/local_image_root/imp-interior-mapping/2.7_wrong_sphere_mask_top.png" alt title></p>
+<p>修正这个错误的思路就是从之前的AND运算变成OR运算，只要在任意方向上超出内腔的范围，就认定为进入墙体。这在逻辑上也是解释得通的<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">float</span> max_xy = max(offsetFromCenter.x, offsetFromCenter.y);</span><br><span class="line"><span class="keyword">float</span> mask = step(max_xy, (<span class="number">1</span> - _wallThickness) * <span class="number">0.5</span>);</span><br><span class="line"><span class="keyword">float</span> max_xz = max(offsetFromCenter.x, offsetFromCenter.z);</span><br><span class="line">mask *= step(max_xz, (<span class="number">1</span> - _wallThickness) * <span class="number">0.5</span>);</span><br><span class="line"><span class="keyword">float</span> max_yz = max(offsetFromCenter.y, offsetFromCenter.z);</span><br><span class="line">mask *= step(max_yz, (<span class="number">1</span> - _wallThickness) * <span class="number">0.5</span>);</span><br><span class="line">mask = <span class="number">1</span> - mask;</span><br></pre></td></tr></table></figure></p>
+ <img src="/local_image_root/imp-interior-mapping/2.8_correct_sphere_mask.png" alt title>可以看到这次终于正确了。<br><br>不过这也会带来一个潜在的问题，<br> <img src="/local_image_root/imp-interior-mapping/2.9_potential_visual_bug.png" alt title>
+<p>当tiling达到某个值的时候，墙面会恰好在立方体的边缘，这个时候，整个表面就被墙遮住了。我曾经想在shader中判断并自动做偏移（只有tiling为偶数的时候才会出现）不过后来决定还是保留这个设定，让使用者自己决定合适的tiling吧。有趣的事，虽然这个问题造成了不少困扰，但是之前AND的操作方法是不会遇到这个问题的;)</p>
+<p>注：这里的tiling = boundarySize / d</p>
+<h1 id="制作Sprite-Layer"><a href="#制作Sprite-Layer" class="headerlink" title="制作Sprite Layer"></a>制作Sprite Layer</h1><p>原论文中提到了制作在空房间内放置道具或者人物的思路，其实实现起来也很简单，和墙面一样是对观察深度进行一个偏移</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">float3 spriteOffset = float3(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0.4</span>); <span class="comment">//这里的含义是将xy平面的内墙从边界开始沿着z轴偏移0.4个block长度</span></span><br><span class="line">float3 spriteLayerRatio = ((<span class="built_in">floor</span>(i.positionCopy * <span class="number">0.999</span> * invert_d)  + stepDir - spriteOffset) / invert_d  - camObjPos) / direction;</span><br><span class="line">float2 F_intersectionXY = (camObjPos + spriteLayerRatio.z * direction).xy  * invert_d; <span class="comment">//视线于垂直墙面XY平面的交点</span></span><br><span class="line">float2 F_intersectionZY = (camObjPos + spriteLayerRatio.x * direction).zy  * invert_d; <span class="comment">//视线于垂直墙面ZY平面的交点</span></span><br><span class="line">float4 F_XYCol = tex2D(_furnitureTexture, F_intersectionXY);</span><br><span class="line">float4 F_ZYCol = tex2D(_furnitureTexture, F_intersectionZY);</span><br><span class="line"><span class="keyword">float</span> F_x_less_z = step(spriteLayerRatio.x, spriteLayerRatio.z); <span class="comment">// 如果先和yz平面相交，则为1，先和xy平面相交，则为0</span></span><br><span class="line">float4 F_verticalCol = lerp(F_XYCol, F_ZYCol, F_x_less_z); <span class="comment">// 决定到底是显示哪个面的texture</span></span><br><span class="line"><span class="keyword">float</span> F_ratio_min_x_z = lerp(spriteLayerRatio.z, spriteLayerRatio.x, F_x_less_z); <span class="comment">// 暂存最小值</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">float</span> ratio_min_xyz = lerp(ratio.y, ratio_min_x_z, xz_y);</span><br><span class="line"><span class="keyword">float</span> F_isLess = step(F_ratio_min_x_z, ratio_min_xyz); <span class="comment">// 判断是否比原本的墙面离摄像机更近</span></span><br><span class="line">innerCol = lerp(innerCol, F_verticalCol, F_isLess * F_verticalCol.a); <span class="comment">// 如果sprite更近且不为透明的部分，就绘制texture</span></span><br></pre></td></tr></table></figure>
+ <img src="/local_image_root/G10" alt title>
+<p>不过这种方法也会有明显的问题，就是只能从一个方向上观察室内的人物或物体，从侧面和背面都能很容易的注意到时面片这一事实。</p>
+<p>我们可以手工指定其他面，从而正确的显示<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">float3 spriteOffset = float3(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0.4</span>);</span><br><span class="line">float3 spriteRatio = ((<span class="built_in">floor</span>(i.positionCopy * <span class="number">0.999</span> * invert_d)  + stepDir - (stepDir - spriteOffset) * _spriteDepth) / invert_d  - camObjPos) / direction;</span><br><span class="line">float2 F_intersectionXY_ori = (camObjPos + spriteRatio.z * direction).xy  * invert_d;</span><br><span class="line">float2 F_intersectionXY = frac(F_intersectionXY_ori);</span><br><span class="line">float2 F_intersectionZY_ori = (camObjPos + spriteRatio.x * direction).zy  * invert_d;</span><br><span class="line">float2 F_intersectionZY = frac((camObjPos + spriteRatio.x * direction).zy  * invert_d);</span><br><span class="line">float4 F_XYCol = tex2D(_furnitureTexture, F_intersectionXY);</span><br><span class="line">float4 F_ZYCol = tex2D(_furnitureTexture, F_intersectionZY);</span><br><span class="line"><span class="keyword">float</span> F_x_less_z = step(spriteRatio.x, spriteRatio.z);</span><br><span class="line"></span><br><span class="line"><span class="comment">// If the tile's unilateral count(from the center to this tile) reach half of total tiling, means it's the side tile</span></span><br><span class="line"><span class="keyword">float</span> isSideOrFront = <span class="built_in">abs</span>(<span class="built_in">ceil</span>(i.positionCopy * <span class="number">0.999</span> * invert_d).x) / (_tiling.x/<span class="number">2</span>) &gt; <span class="number">0.99</span> ? <span class="number">1</span>:<span class="number">0</span>;</span><br><span class="line"><span class="comment">// Pick the color from side texture</span></span><br><span class="line">float4 F_verticalCol = lerp(F_XYCol, F_ZYCol, isSideOrFront);</span><br><span class="line"><span class="comment">// Here we use the ratio of the face we decided to use in above step to overwrite the actual minimal one "F_x_less_z"</span></span><br><span class="line"><span class="keyword">float</span> F_ratio_min_x_z = lerp(spriteRatio.z, spriteRatio.x, isSideOrFront);</span><br><span class="line">float2 halfTileCount = lerp(F_intersectionXY_ori, F_intersectionZY_ori, isSideOrFront) / _tiling.x * <span class="number">2</span>;</span><br><span class="line"><span class="comment">// Because our sprite will keep repeating, even in the place we should not see it. Luckily, we can use the time it repeats to see if it's out of the valid display region.</span></span><br><span class="line"><span class="keyword">bool</span> validSpriteRegion = <span class="number">1</span></span><br><span class="line">    * step(<span class="built_in">abs</span>(halfTileCount.y), <span class="number">1</span>) </span><br><span class="line">    * step(<span class="built_in">abs</span>(halfTileCount.x), <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">float</span> ratio_min_xyz = lerp(ratio.y, ratio_min_x_z, xz_y);</span><br><span class="line"><span class="keyword">float</span> F_isLess = step(F_ratio_min_x_z, ratio_min_xyz) * validSpriteRegion;</span><br><span class="line">innerCol = lerp(innerCol, F_verticalCol, F_isLess * F_verticalCol.a);</span><br></pre></td></tr></table></figure></p>
+ <img src="/local_image_root/10" alt title> 可以看到效果还是很糟糕<br><br>所以我在这里的方法是利用billboard思想制作一个可以自动跟随摄像机的sprite<br><br>传统的billboard思路是变换顶点坐标：将object space下的坐标直接赋值给view space，即可以获得稳定不变的view位置。几乎所有的操作也都是在vertex shader中完成的<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">float4 billboardPos = mul(UNITY_MATRIX_P,</span><br><span class="line">    mul(UNITY_MATRIX_MV, float4(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>)) <span class="comment">// 依旧要记录物体中心的位置，否则物体始终在屏幕中央</span></span><br><span class="line">    + float4(v.vertex.x, v.vertex.y, <span class="number">0.0</span>, <span class="number">0.0</span>));</span><br></pre></td></tr></table></figure>
+<p>但是显然这种方法无法运用到我们这个例子上，因为其他部分的显示要依附于原始的顶点位置，另外如果我们有多个block，那么对于每个block，我们无法再分出更多的顶点来完成变换（不会考虑Gemotry Shader)</p>
+<p>我们的思路是在保持顶点位置不变的情况下，算出每个像素对应的立方体表面的一个点的投影坐标<br><a href="https://stackoverflow.com/questions/13711252/what-does-gl-fragcoord-z-gl-fragcoord-w-represent" target="_blank" rel="noopener">https://stackoverflow.com/questions/13711252/what-does-gl-fragcoord-z-gl-fragcoord-w-represent</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/09/11/weekly-animation-share-vol-2/" rel="next" title="Weekly Animation Share Vol 2">
+                <i class="fa fa-chevron-left"></i> Weekly Animation Share Vol 2
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+    </div>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  
+  <aside id="sidebar" class="sidebar sidebar-hide">
+    
+      <div id="sidebar-dimmer"></div>
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <!--<li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>-->
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/avatar.png" alt="tasiYokan">
+          <p class="site-author-name" itemprop="name">tasiYokan</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#基本思路的实现"><span class="nav-number">1.</span> <span class="nav-text">基本思路的实现</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#可配置厚度墙面的实现"><span class="nav-number">2.</span> <span class="nav-text">可配置厚度墙面的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#判断像素是否在墙内"><span class="nav-number">2.1.</span> <span class="nav-text">判断像素是否在墙内</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用AND还是OR"><span class="nav-number">2.2.</span> <span class="nav-text">使用AND还是OR</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#制作Sprite-Layer"><span class="nav-number">3.</span> <span class="nav-text">制作Sprite Layer</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">tasiYokan</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+      
+  <div class="expand-toc">
+    <i class="fa fa-list-ol"></i>
+    
+  </div>
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+  <script type="text/javascript" src="/js/src/blocked-video.js"></script>
+</body>
+</html>
