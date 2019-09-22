@@ -434,7 +434,7 @@
       
         
           <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/imp-interior-mapping/1.0_cover.png" alt title="最终的效果图">
-<h1 id="基本思路的实现"><a href="#基本思路的实现" class="headerlink" title="基本思路的实现"></a>基本思路的实现</h1><p>思路可以参考Joost van Dongen的论文<a href="https://pdfs.semanticscholar.org/8622/48de620efe27705af3702ab2a2c0d4ec76ec.pdf" target="_blank" rel="noopener">Interior Mapping - A new technique for rendering realistic buildings</a><br>按照Joost论文中的思路实现即可，本文不再详述。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/imp-interior-mapping/1.1_basic_idea.png" alt title="论文中的图示和下面代码的对应关系"><br>
+<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>Interior Mapping主要用于在物体表面利用透视错局模拟出格子结构的内部内容。虽然从外部观察起来，物体内部的构造是“真实的”，但一切渲染都没有依靠更多的模型或真实顶点。这在渲染大量模式化的内部结构中会有很大作用。<br>例如渲染高楼林立的都市时，如果要渲染每个单独的房间就会有大量的性能开销，完全的使用单一的贴图又会有些单调，这个时候就适合用Interior Mapping来伪造出建筑的外观而不让性能下降太多。<br>它的几个优点：<br>1.房间的数量不会影响framerate或内存开销<br>2.并不需要太多的额外资源就可以表现大的场景<br>3.实现上并不要求高级的shader model特性<br>
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2019/09/14/implementation-of-interior-mapping/#more" rel="contents">
