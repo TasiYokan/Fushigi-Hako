@@ -1,0 +1,1240 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/en/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/en/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/en/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="graphics,shader,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/en/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="定义ddx/ddy用于返回屏幕空间中某一值关于x,y方向上的偏导数。它只可以用于fragment program中，参数必须来自fragment的输入。HLSL对ddx的定义：Returns the partial derivative of the specified value with respect to the screen-space x-coordinate.GLSL中对应的函数为d">
+<meta name="keywords" content="graphics,shader">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Notes on ddx&#x2F;ddy">
+<meta property="og:url" content="http://yoursite.com/2019/08/25/Notes-on-ddx-ddy/index.html">
+<meta property="og:site_name" content="不思議な箱">
+<meta property="og:description" content="定义ddx/ddy用于返回屏幕空间中某一值关于x,y方向上的偏导数。它只可以用于fragment program中，参数必须来自fragment的输入。HLSL对ddx的定义：Returns the partial derivative of the specified value with respect to the screen-space x-coordinate.GLSL中对应的函数为d">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://anteru.net/images/2018/pixel-crosstalk.svg">
+<meta property="og:image" content="https://gpuopen.com/wp-content/uploads/2016/08/ds_pattern.png">
+<meta property="og:image" content="https://gpuopen.com/wp-content/uploads/2016/08/qdmode.png">
+<meta property="og:image" content="https://gpuopen.com/wp-content/uploads/2016/08/ds-swizzle-b32.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/ddx/mipmap_lod.png">
+<meta property="og:image" content="https://i.stack.imgur.com/VJEqW.png">
+<meta property="og:image" content="http://album.sina.com.cn/pic/002hBfPnzy7dvLft6NX99">
+<meta property="og:updated_time" content="2019-10-13T13:46:03.123Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Notes on ddx&#x2F;ddy">
+<meta name="twitter:description" content="定义ddx/ddy用于返回屏幕空间中某一值关于x,y方向上的偏导数。它只可以用于fragment program中，参数必须来自fragment的输入。HLSL对ddx的定义：Returns the partial derivative of the specified value with respect to the screen-space x-coordinate.GLSL中对应的函数为d">
+<meta name="twitter:image" content="https://anteru.net/images/2018/pixel-crosstalk.svg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/en/',
+    scheme: 'Pisces',
+    sidebar: {"position":"right","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false,"onmobile":true},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/08/25/Notes-on-ddx-ddy/">
+
+
+
+
+
+  <title>Notes on ddx/ddy | 不思議な箱</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/en/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">不思議な箱</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        <li class="menu-item menu-item-lang">
+          <a href="/en/../" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-language"></i> <br>
+            
+            中文语言
+          </a>
+        </li>
+        
+      
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/en/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+        
+      
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/en/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+        
+      
+        
+        
+      
+      <!-- 
+      <li class="menu-item menu-item-home">
+        <a href="/en/" rel="section">
+          
+            <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+          
+          Home
+        </a>
+      </li> -->
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+
+  
+
+  <div class="site-author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" src="/en/images/avatar.png" alt="tasiYokan">
+    <p class="site-author-name" itemprop="name">tasiYokan</p>
+      
+        <p class="site-description motion-element" itemprop="description"></p>
+    
+  </div>
+
+  <nav class="site-state">
+    
+      <div class="site-state-item site-state-posts">
+        <a href="/en/archives/">
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+    
+
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        <a href="/en/categories/index.html">
+          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-name">categories</span>
+        </a>
+      </div>
+    
+
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        <a href="/en/tags/index.html">
+          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-name">tags</span>
+        </a>
+      </div>
+    
+  </nav>
+  <p></p>
+
+  
+
+  
+
+
+</nav>
+
+
+<script type="text/javascript">
+    // Wait for the page to load first
+    var _prevOnload = window.onload;
+    var swithlang = function ()  {
+        // var switchLang = document.getElementById("menu").getElementsByClassName("menu-item-switch_lang")[0].childNodes[0];
+        var href = window.location.href;
+        var menu = document.getElementById("menu");
+        var switchLang = menu.getElementsByClassName("menu-item-lang")[0].getElementsByTagName("a")[0];
+
+        var indexOfEn = href.toLowerCase().indexOf('/en/');
+        if (indexOfEn !== -1) {
+            // console.log("switch to cn from "+ switchLang.href );
+            switchLang.href = href.replace('/en/', '/');
+        }
+        else {
+            // console.log("switch to en from " + switchLang.href );
+            switchLang.href = href.replace(/(^http[s]?:\/\/[a-z0-9.]*[:?0-9]*\/)(.*)/i, '$1en/$2');
+        }
+        // console.log("href now is " + switchLang.href);
+    }
+
+    // Switch directly as the load may take a while
+    // swithlang();
+
+    window.onmousedown = function() {
+        swithlang();
+    }
+</script>
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <div class="post-inner">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/en/2019/08/25/Notes-on-ddx-ddy/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="tasiYokan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/en/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="不思議な箱">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Notes on ddx/ddy</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-25T19:24:30+08:00">
+                2019-08-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/en/categories/Theory/" itemprop="url" rel="index">
+                    <span itemprop="name">Theory</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon">
+              <i class="fa fa-eye"></i>
+            </span>
+            
+              <span class="post-meta-item-text">Views</span>
+            
+            <span class="page-pv">
+              <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h1><p>ddx/ddy用于返回屏幕空间中某一值关于x,y方向上的偏导数。它只可以用于fragment program中，参数必须来自fragment的输入。<br>HLSL对<a href="https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-ddx" target="_blank" rel="noopener">ddx的定义</a>：Returns the partial derivative of the specified value with respect to the screen-space x-coordinate.<br>GLSL中对应的函数为<a href="https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/dFdx.xhtml" target="_blank" rel="noopener">dFdx/dFdy</a></p>
+<a id="more"></a>
+<h1 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h1><p>在triangle rasterization阶段，GPU会对多个像素实例同时运行fragment shader。在最细的程度上，它将会通过SIMD同时跑32-64个像素（实例）。在这些像素中，又会被划分成2 * 2的小组（又被称为quad-fragments），所以每个组会有四个相邻的像素，这样SIMD指令就能同时处理屏幕上2 * 2 = 4个像素了。<br>每个像素中的值都来自于vertex program或其他步骤输出之后得到的插值，所以对于这些值来说，在进入到fragment shader之前就完成了计算，这些是可以并行计算得到的。所以在fragment shader中运行ddx(vertexOuput)的时候，就能知道这个插值的变化导数。</p>
+<p>fragment shader之所以能够访问到相邻像素的数据（即SIMD的不同lanes/thread，每个lanes/thread都处理一个像素），是因为GPU利用了(quad) swizzle进行了跨lanes的数据访问<br><img src="https://anteru.net/images/2018/pixel-crosstalk.svg" alt title="来源：[7]"></p>
+<p>对于AMD的GCN，<code>ds_swizzle_b32</code>指令的offset field是留给<code>ds_pattern</code>的。它有两种模式<a href="#ref">[10]</a>：</p>
+<blockquote>
+<ul>
+<li><strong>Quad-permute mode (QDMode)</strong>: Each of the four adjacent lanes can access each other’s data, and the same switch applies to each set of four. The ds_pattern LSBs directly encode the element ID for each lane.</li>
+<li><strong>Bit-masks mode (BitMode)</strong>: This mode enables limited data sharing within 32 consecutive lanes. Each lane applies bitwise logical operations with constants to its lane ID to produce the element ID from which to read. Constants are encoded in ds_pattern .</li>
+</ul>
+</blockquote>
+<p><img src="https://gpuopen.com/wp-content/uploads/2016/08/ds_pattern.png" alt title="对应的图示"><br>QDMode模式会更清晰一点<br><img src="https://gpuopen.com/wp-content/uploads/2016/08/qdmode.png" alt title="一个简单的例子：分别将原来的0,1,2,3位变成2,1,3,3位"><br><img src="https://gpuopen.com/wp-content/uploads/2016/08/ds-swizzle-b32.png" alt title="过程示意图"></p>
+<h1 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h1><h2 id="1-计算Lod或各向异性-Anisotropy"><a href="#1-计算Lod或各向异性-Anisotropy" class="headerlink" title="1.计算Lod或各向异性(Anisotropy)"></a>1.计算Lod或各向异性(Anisotropy)</h2><p>因为mipmap level需要计算fragmentInput.uv的导数，即相邻像素之间对应纹素的差距。过程是将屏幕坐标的点映射到uv平面上，然后计算出距离。取出最大的一个距离L，并做$log_2⁡L$。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/ddx/mipmap_lod.png" alt title="计算mipmap level图示，来源：[5]"><br>其含义就是如果uv平面中采样点很稀，相应的du/dx或其他的值就比较大，L也相应的比较大。这种情况说明Minification了，很多纹素就堆在了一个像素里。我们实际上用不到这么多纹素，于是一个很高级别的mipmap(更模糊的）就可以用来节省渲染的负担，也可以避免出现锯齿。<br><img src="https://i.stack.imgur.com/VJEqW.png" alt title="计算uv的偏导的图示，来源：[1]"></p>
+<h2 id="2-计算面法线"><a href="#2-计算面法线" class="headerlink" title="2.计算面法线"></a>2.计算面法线</h2><p>在 FragShader 中，调用<code>ddx(i.position)</code>, 和<code>ddy(i.position)</code>可以求出相邻的2 个像素之间座标的差值，即两个像素在三角面上采样的点所构成的向量。下面图中的红色和绿色2个向量即为ddx,ddy所返回的向量<br><img src="http://album.sina.com.cn/pic/002hBfPnzy7dvLft6NX99" alt title="来源：[2]"></p>
+<p>而这2 个向量都在这个三角形的平面上，那么<br><code>normal = normalize(cross(ddx(pos), ddy(pos)))</code><br>就可以求出的面的法线，但是这里要注意，在 HLSL 或者Unity shader里要写成normalize(cross(ddy(pos), ddx(pos))) , 不然法线是反向的。这个是由于左右手座标系引起的。</p>
+<h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><p>嵌套使用ddx(p)或ddy(p)可能导致undefine的值，如ddx(ddx(p))或ddx(ddy(p))。<br>同时，程序假设参数p是连续的。对于嵌在flow-control代码段的值，因为不是每一个在quad-fragment中的片段都会执行同样的branch，所以结果也是undefine的<br>ddx/ddy分为coarse版本和fine版本。如果直接使用ddx，等价于ddx_coarse（可以看做alias).<br><a href="https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/ddx-coarse" target="_blank" rel="noopener">ddx_coarse</a>和<a href="https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/ddx-fine" target="_blank" rel="noopener">ddx_fine</a>对于同一组2*2的quad-fragment的四个像素，他们的偏导数都将会是一样。这两个函数需要Shader Model 5的支持<a href="#ref">[4]</a></p>
+<p>其他相关函数：<code><a href="https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-fwidth" target="_blank" rel="noopener">fwidth(p)</a> = abs(ddx(p)) + abs(ddy(p))</code></p>
+<p><span id="ref"></span></p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="https://gamedev.stackexchange.com/a/130933" target="_blank" rel="noopener">[1] What are screen space derivatives and when would I use them?</a><br><a href="http://www.aclockworkberry.com/shader-derivative-functions" target="_blank" rel="noopener">[2] An introduction to shader derivative functions | A Clockwork Berry</a><br><a href="https://gamedev.stackexchange.com/a/62650" target="_blank" rel="noopener">[3] What does ddx (hlsl) actually do?</a><br><a href="https://fgiesen.wordpress.com/2011/07/10/a-trip-through-the-graphics-pipeline-2011-part-8/#comment-1990" target="_blank" rel="noopener">[4] A trip through the Graphics Pipeline 2011, part 8</a><br><a href="http://15462.courses.cs.cmu.edu/spring2018/lecture/persp/slide_055" target="_blank" rel="noopener">[5] [CMU 15462] Lecture 7: PerspectiveTexture</a><br><a href="https://catlikecoding.com/unity/tutorials/advanced-rendering/flat-and-wireframe-shading/" target="_blank" rel="noopener">[6] Flat and Wireframe Shading Derivatives and Geometry</a><br><a href="https://anteru.net/blog/2018/more-compute-shaders/" target="_blank" rel="noopener">[7] More compute shaders</a><br><a href="https://developer.nvidia.com/gpugems/GPUGems2/gpugems2_chapter35.html" target="_blank" rel="noopener">[8] [GPU Gems 2] 35.2.4 The Swizzle Operator</a><br><a href="https://developer.nvidia.com/reading-between-threads-shader-intrinsics" target="_blank" rel="noopener">[9] [Reading Between The Threads: Shader Intrinsics] Fragment Quad Swizzle - Data Exchange and Arithmetic</a><br><a href="https://gpuopen.com/amd-gcn-assembly-cross-lane-operations/" target="_blank" rel="noopener">[10] [AMD GCN Assembly: Cross-Lane Operations] The Swizzle Instruction</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/en/tags/graphics/" rel="tag"># graphics</a>
+          
+            <a href="/en/tags/shader/" rel="tag"># shader</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/en/2019/07/31/raindrop-effect/" rel="next" title="制作不使用贴图的水滴特效">
+                <i class="fa fa-chevron-left"></i> 制作不使用贴图的水滴特效
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/en/2019/09/07/weekly-animation-share-vol-1/" rel="prev" title="Weekly Animation Share Vol.1">
+                Weekly Animation Share Vol.1 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+    </div>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  
+  <aside id="sidebar" class="sidebar sidebar-hide">
+    
+      <div id="sidebar-dimmer"></div>
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <!--<li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>-->
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/en/images/avatar.png" alt="tasiYokan">
+          <p class="site-author-name" itemprop="name">tasiYokan</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/en/archives/">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">posts</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/en/categories/index.html">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">categories</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/en/tags/index.html">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#定义"><span class="nav-number">1.</span> <span class="nav-text">定义</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#实现原理"><span class="nav-number">2.</span> <span class="nav-text">实现原理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#应用"><span class="nav-number">3.</span> <span class="nav-text">应用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-计算Lod或各向异性-Anisotropy"><span class="nav-number">3.1.</span> <span class="nav-text">1.计算Lod或各向异性(Anisotropy)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-计算面法线"><span class="nav-number">3.2.</span> <span class="nav-text">2.计算面法线</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#注意事项"><span class="nav-number">4.</span> <span class="nav-text">注意事项</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">tasiYokan</span>
+</div>
+
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+      
+  <div class="expand-toc">
+    <i class="fa fa-list-ol"></i>
+    
+  </div>
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/en/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/en/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/en/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/en/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/en/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/en/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/en/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/en/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/en/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/en/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/en/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/en/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/en/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/en/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+</body>
+</html>

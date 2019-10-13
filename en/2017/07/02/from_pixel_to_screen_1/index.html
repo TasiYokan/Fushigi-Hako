@@ -1,0 +1,1277 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/en/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/en/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/en/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="graphics,shader,game,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/en/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="keywords" content="graphics,shader,game">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从像素之间谈起：像素游戏的画面增强（上）">
+<meta property="og:url" content="http://yoursite.com/2017/07/02/from_pixel_to_screen_1/index.html">
+<meta property="og:site_name" content="不思議な箱">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/large_scale_pixel.jpg">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/dragon_den.gif">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/small_scale_pixel.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/small_scale_pixel_zoomed.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/metal_slug.jpg">
+<meta property="og:image" content="http://i58.tinypic.com/2lnu2b9.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/geom.jpg">
+<meta property="og:image" content="http://abload.de/img/royale0iu4f.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/hard_separate_1.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/hard_separate_2.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/cos_sum_tween.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/gaussian_smooth.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/dotnbloombig.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/9pixel_neighbours.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/sample_weight.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/euclid_kernel_squared.jpg">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/euclid_kernel.jpg">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/low-pass_filtering.jpg">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/after_discretization.jpg">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/top_view_discretization.jpg">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/before_offset.jpg">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/after_offset.jpg">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/different_subdivision_level.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/dotnbloombig.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/problem_of_blackline.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/problem_of_blackline_solved.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/euclid_dist.jpg">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/performance_single.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/performance.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/3xScaled.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/result.jpg">
+<meta property="og:updated_time" content="2019-10-13T13:46:03.138Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="从像素之间谈起：像素游戏的画面增强（上）">
+<meta name="twitter:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/large_scale_pixel.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/en/',
+    scheme: 'Pisces',
+    sidebar: {"position":"right","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false,"onmobile":true},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/07/02/from_pixel_to_screen_1/">
+
+
+
+
+
+  <title>从像素之间谈起：像素游戏的画面增强（上） | 不思議な箱</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/en/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">不思議な箱</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        <li class="menu-item menu-item-lang">
+          <a href="/en/../" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-language"></i> <br>
+            
+            中文语言
+          </a>
+        </li>
+        
+      
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/en/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+        
+      
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/en/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+        
+      
+        
+        
+      
+      <!-- 
+      <li class="menu-item menu-item-home">
+        <a href="/en/" rel="section">
+          
+            <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+          
+          Home
+        </a>
+      </li> -->
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+
+  
+
+  <div class="site-author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" src="/en/images/avatar.png" alt="tasiYokan">
+    <p class="site-author-name" itemprop="name">tasiYokan</p>
+      
+        <p class="site-description motion-element" itemprop="description"></p>
+    
+  </div>
+
+  <nav class="site-state">
+    
+      <div class="site-state-item site-state-posts">
+        <a href="/en/archives/">
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+    
+
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        <a href="/en/categories/index.html">
+          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-name">categories</span>
+        </a>
+      </div>
+    
+
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        <a href="/en/tags/index.html">
+          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-name">tags</span>
+        </a>
+      </div>
+    
+  </nav>
+  <p></p>
+
+  
+
+  
+
+
+</nav>
+
+
+<script type="text/javascript">
+    // Wait for the page to load first
+    var _prevOnload = window.onload;
+    var swithlang = function ()  {
+        // var switchLang = document.getElementById("menu").getElementsByClassName("menu-item-switch_lang")[0].childNodes[0];
+        var href = window.location.href;
+        var menu = document.getElementById("menu");
+        var switchLang = menu.getElementsByClassName("menu-item-lang")[0].getElementsByTagName("a")[0];
+
+        var indexOfEn = href.toLowerCase().indexOf('/en/');
+        if (indexOfEn !== -1) {
+            // console.log("switch to cn from "+ switchLang.href );
+            switchLang.href = href.replace('/en/', '/');
+        }
+        else {
+            // console.log("switch to en from " + switchLang.href );
+            switchLang.href = href.replace(/(^http[s]?:\/\/[a-z0-9.]*[:?0-9]*\/)(.*)/i, '$1en/$2');
+        }
+        // console.log("href now is " + switchLang.href);
+    }
+
+    // Switch directly as the load may take a while
+    // swithlang();
+
+    window.onmousedown = function() {
+        swithlang();
+    }
+</script>
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <div class="post-inner">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/en/2017/07/02/from_pixel_to_screen_1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="tasiYokan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/en/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="不思議な箱">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">从像素之间谈起：像素游戏的画面增强（上）</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-07-02T19:34:14+08:00">
+                2017-07-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/en/categories/Dev/" itemprop="url" rel="index">
+                    <span itemprop="name">Dev</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon">
+              <i class="fa fa-eye"></i>
+            </span>
+            
+              <span class="post-meta-item-text">Views</span>
+            
+            <span class="page-pv">
+              <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>由于文章太长，我将最初的文章拆成两个部分，下篇见 <a href="/2017/07/03/from_pixel_to_screen_2/">从像素之间谈起：像素游戏的画面增强（下）</a></p>
+<h1 id="无所不在的像素画"><a href="#无所不在的像素画" class="headerlink" title="无所不在的像素画"></a>无所不在的像素画</h1><h2 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h2><p>随着分辨率的普遍提高，我们已经告别了依赖于简陋像素来表现游戏画面的年代。但还是有不少人像我一样沉迷于像素美术和游戏。如今到处可以都可以看到的各式像素作品，虽然大多被直接称呼为像素画，但实际上已经分化为很多分支，简单的将其归类为像素作品未免太含糊。在开始正文之前我先将他们粗粗的分个类。一些比较常见的代表如：</p>
+<ol>
+<li>大颗粒像素，此类像素作品一般细节较少，人物符号化或者抽象化。同时还可能出现非像素元素，如光晕，渐变 <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/large_scale_pixel.jpg" alt title="单键Bob，一个颇为爽快的flash游戏"><a id="more"></a></li>
+<li><p>粒度较小的像素画，主要还是色块化，边缘并没有强化。 <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/dragon_den.gif" alt title="HGSS中的Dragon Den"></p>
+</li>
+<li><p>强化边缘和高光，细节丰富，但是普遍尺寸较小。 <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/small_scale_pixel.png" alt title="Drill Dozer截图"></p>
+</li>
+</ol>
+<p>另外，在一些UI图标的绘制过程中，由于图标较小，也同样采用像素点绘的方式。因为它平时也不会被称为像素画，所以这里也不讨论。</p>
+<p>其中第3种是我在本文中将着重讨论的。<br>这类像素图可能和平时所提到的像素图差的最远，因为它并不是为了做出像素化效果而诞生的。相反它是游戏机在分辨率和色板支持加强之后的产物（光是从GB到GBC，支持的色深就从2位变成了15位）。在这方面，任天堂算是是做到了极致（也可能因为任天堂的主机的屏幕天生小的缘故）这类像素画在抗锯齿（伪），光照，色彩的调和的方面很有特点（这篇文章中不细说）</p>
+<h2 id="再现像素画"><a href="#再现像素画" class="headerlink" title="再现像素画"></a>再现像素画</h2><p>就GBA而言，分辨率为240 *160，但我们现在再制作像素的游戏时，玩家一定不会接受在这么小的一个屏幕上去玩游戏。一个是因为眼睛看的太累（长大后眼睛都变差了…）。另一方面，考虑到像素画的成本，也不建议针对一个1080p的屏幕进行逐像素绘画。为了满足一些玩家想要的像素的效果，一个最简单直接的方法就是将画面放大。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/small_scale_pixel_zoomed.png" alt title="这幅图放大了3倍之后，也许会更容易于将它认为是像素画风"></p>
+<p>虽然这种方法省时省力，但是也会带来一个问题。在绘制像素画中的曲线时，由于一般不对线条使用反走样（会让画面变脏）来抗锯齿。在分辨率较低的时候，像素的边缘可以帮助人们识别且很难注意到异样，但当画面放大后，这些边缘就会显得粗糙不堪。这也是像素画风被一些人所诟病的原因。</p>
+<p>为此，包括ppsspp在内的模拟器中，会内置不少shader来对图像进行后期处理。对于2D图像来说，具体方法包括xBRZ等滤镜来平滑放大图像（xBRZ对2D像素放大会产生平滑而舒适的效果，但是这会损失像素的特征），增加crt, 扫描线等后期特效将像素画做旧。当然，你也可以利用物理的手段将信号输出到CRT屏幕上，参考<a href="http://wavebeam.blogspot.jp/2016/01/a-beginners-guide-to-best-retro-gaming.html" target="_blank" rel="noopener">这里</a><br>另外，<a href="https://blz.la/rgb/gaming_crt.html" target="_blank" rel="noopener">这篇文章</a> 中讲述了一些crt效果的来源，也讨论了很多细节问题。一个简单的对比图： <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/metal_slug.jpg" alt title="from: http://www.neogaf.com/forum/showthread.php?p=236239524"><br>常见的效果如下<br><img src="http://i58.tinypic.com/2lnu2b9.png" alt="尝试翻墙显示" title="from: http://shmups.system11.org/viewtopic.php?f=6&t=51298&start=30" width="50%"><br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/geom.jpg" alt title="注意屏幕的扭曲，这其实是crt的物理性质决定的"><br><img src="http://abload.de/img/royale0iu4f.png" alt="尝试翻墙显示" title="注意像素的膨胀" width="50%"></p>
+<p>虽然实现方法不同，但总的来说都是在像素之间增加了隔断，人们的大脑会趋向为这种断裂解释理由，自动为图像进行内部平滑处理。这就和我们凑近屏幕看游戏画面但是不会觉得画面模糊的原因类似。另一方面，因为扫描线的存在，画面的层次感也可以体现出来，使得画面更加可信。甚至连Her Story中都为了剧情的需要用些crt效果。<br><a href="http://filthypants.blogspot.jp/2015/04/more-crt-shaders.html" target="_blank" rel="noopener">这篇文章</a>里介绍了大量的post processing shader，很有借鉴意义。<br><br></p>
+<h1 id="一个shader的实现思路"><a href="#一个shader的实现思路" class="headerlink" title="一个shader的实现思路"></a>一个shader的实现思路</h1><p>本文的后期特效将主要适用于前面所述的第三种情况，也即通过临近采样的方式放大图像而达到加强像素化的目的。更多的模拟LCD屏幕而不是CRT屏幕，所以一些包括屏幕扭曲，通道分离的效果在本文中将不会涉及。本文会利用psp模拟器，将扫描线效果应用到Tactics Ogres（中文译为：皇家骑士团）上。<br>我主要从两方面完成对像素图的画面增强：1.利用微小的分割线来分隔开像素，让人们产生像素相连的错局。2.利用低通滤波器稍许的平滑像素边界（但是不宜平滑太多，不然会失去像素风格的特点）</p>
+<p>为了统一，后面的演示代码都用CG来写，输入的纹理尺寸为512 x 384</p>
+<h2 id="格子的分割"><a href="#格子的分割" class="headerlink" title="格子的分割"></a>格子的分割</h2><h3 id="硬分割"><a href="#硬分割" class="headerlink" title="硬分割"></a>硬分割</h3><p>首先，将像素放大了2倍之后，实际看到的一个“像素 pixel”（叫纹素 texel更为贴切）是2 x 2个像素。虽然我们想营造出的效果是让玩家觉得游戏的像素与像素之间产生了间距，但除了在原先的一个像素上通过勾画边缘来实现分割，我们并不能真的将像素之间创造出空格。这步操作之后，最小单位仍然是像素。下图所示的分别是每2个像素进行一次分割和每4个像素进行一次分割的图示。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/hard_separate_1.png" alt title="每两格有一个明暗变化周期"><br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/hard_separate_2.png" alt title="每四格有一个明暗变化周期"><br>对于后期特效来说，输入的纹理为camera input，上图是1 texel对应 4 pixel，而下面是1 texel对应 16 pixel。<br>为了找到分割的位置，需要能够区分一个纹素所对应的像素。方法并不复杂, 若一个纹素拆分为4*4个像素，可以在顶点着色器上输出如下vec2：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">o.pixel_no = float2(o.uv.x * _MainTex_TexelSize.z, o.uv.y * _MainTex_TexelSize.w) * <span class="number">0.25</span>;</span><br></pre></td></tr></table></figure></p>
+<p><code>_MainTex_TexelSize</code> 是内置uniform，记录输入纹理的相关信息，其中zw分量即为宽和高。对于ppsspp模拟器，可以通过 <code>u_texelDelta</code> 来计算屏幕的resolution，后面会提到。<br>有了pixel_no的信息，我们就可以在片段着色器里进行插值了：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">fixed4 <span class="title">Pass_Scanline</span><span class="params">(float2 uv)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">float</span> column = <span class="number">4</span>;</span><br><span class="line">        float2 pixel_no = </span><br><span class="line">            frac(float2(uv.x * <span class="number">1024.0</span>, uv.y * <span class="number">768</span>) * _ScreenScale / column);</span><br><span class="line">        <span class="keyword">if</span>(pixel_no.x &lt; <span class="number">1</span> / column || pixel_no.y &lt; <span class="number">1</span> / column)</span><br><span class="line">            <span class="keyword">return</span> PREVIOUS_PASS(uv) * <span class="number">0.5</span>;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            <span class="keyword">return</span> PREVIOUS_PASS(uv);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>其中PREVIOUS_PASS是一个宏，用来嵌套伪multi-pass，这里的PREVIOUS_PASS可以简单的理解为上一个获取纹理的值的pass。这里当column为4的时候，一个纹素对应的四个像素的pixel_no的x分量分别为1/8, 3/8, 5/8, 7/8，我们可以利用这个信息来判断究竟哪个像素是这个纹素的边缘。<br>硬分割虽然完成了对像素的分割，但是效果比较生硬。玩家感受到的不是从屏幕上反映的图像，而更像是罩上了网格的图像。这也和asset store上的<a href="https://www.assetstore.unity3d.com/en/#!/content/73708" target="_blank" rel="noopener">这个效果</a>类似。</p>
+<h3 id="丰富分割细节"><a href="#丰富分割细节" class="headerlink" title="丰富分割细节"></a>丰富分割细节</h3><p>硬分割的效果不理想，于是很自然的想到为这个边缘添加一些过渡效果是否会好一点呢？答案是肯定的。另外，为了能取得比较好的过渡效果，我们应该适当提高pixel对texel的比例，测试下来发现一般来说3比较合适，2的话太窄，而4的话，图像放大的过大。<br>为了理解方便，我们将图像的边缘定义为暗，图像的中央定义为亮，这样明暗间隔就能产生所谓的扫面线。问题演变为在一个纹素所对应的所有像素中，如何找到一个亮与暗的分布，从而表现出一个荧光格子的效果<br>如果单纯的亮度从中心开始，依照切比雪夫距离向边缘递减，效果其实不太理想，纹素与纹素之间割裂的依旧生硬<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/cos_sum_tween.png" alt title><br>所以我们想找到一种方式柔滑这一过程，首先可以尝试用高斯平滑来处理<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/gaussian_smooth.png" alt title="不过作用效果还是在一个纹素内，所以还是不够好"></p>
+<p>卷积核<br>简单的过渡不够，所以需要找到一个卷积核（kernel）来将像素周围的情况考虑进去，最常见的低通滤波器就是高斯滤波器（Gaussian Filter）但直接使用的话，会造成画面均匀平滑。Themaister提供了一个很好的思路（虽然由于git目录失效，原始的代码已经不可考，但是我还是在网上找到了一个<a href="https://searchcode.com/codesearch/view/26809099/" target="_blank" rel="noopener">GLSL版本</a> ），效果如下图所示：<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/dotnbloombig.png" alt title="除了有些恼人的小黑边，但是总体效果非常接近我想要的最终效果"><br>他的思路简单概述起来就是，一组像素（如4x4）向所在纹素的相邻8个纹素取样，权重为该像素到纹素距离倒数的负相关。本质上是一个非对称的低通滤波器。它的优势在于，针对每个纹素内的像素，所采样的纹素是一致的（保留了像素的质感）而在纹素内部，利用非对称的卷积核实现亮度的变化。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/9pixel_neighbours.png" alt title="一个纹素被分为9个像素"><br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/sample_weight.png" alt title="取左上角的像素进行演示，红色的线条的长度与权重成负相关"><br>我们知道越靠近中间，加权值越高，对于一个靠左下角的像素来说，将其卷积核画出来可能会像这样：<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/euclid_kernel_squared.jpg" alt title="权重为Exp(-2.05 * 平方欧氏距离)"><br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/euclid_kernel.jpg" alt title="权重为Exp(-2.05 * 欧氏距离)"><br>之所以不选择平方欧氏距离，是因为这会造成加权之后，中间亮度区分不开来，而周围的亮度又太低，会有种硬分割的感觉。<br>在对周围的采样做了积分之后可以得到下图。虽然和前面的图很像，这张图的意义和刚才的并不一样，它代表的是一个纹素内的亮度分布（假设亮度的原始分布均匀）。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/low-pass_filtering.jpg" alt title><br>考虑到以上的操作局限在一个很小的范围内，所以我们可以将其离散化后观察<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/after_discretization.jpg" alt title><br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/top_view_discretization.jpg" alt title="从顶部看会更直观"></p>
+<h3 id="一些细节"><a href="#一些细节" class="headerlink" title="一些细节"></a>一些细节</h3><h4 id="滤波器的构成"><a href="#滤波器的构成" class="headerlink" title="滤波器的构成"></a>滤波器的构成</h4><p>Themaister的方法中，考虑了亮度对像素最终颜色的影响，这个滤波器由两个函数构成，一个是空间域上的滤波器系数，另一个是值域（亮度）上的系数。如果采样点上的亮度越亮，意味着它将会更多的侵蚀着其他的像素。有关Glow效果，可以参考<a href="http://www.gamasutra.com/view/feature/130520/realtime_glow.php" target="_blank" rel="noopener">这篇文章</a><br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">float</span> <span class="title">color_bloom</span><span class="params">(float3 color)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">// const float3 gray_coeff = float3(0.30, 0.59, 0.11);</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">float</span> shine = <span class="number">0.25</span>;</span><br><span class="line">    <span class="keyword">float</span> bright = Luminance(color);<span class="comment">//dot(color, gray_coeff);</span></span><br><span class="line">    <span class="keyword">return</span> lerp(<span class="number">1.0</span> + shine * <span class="number">0.5</span>, <span class="number">1.0</span> - shine, bright);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这里我们除了可以自己定义gray_coeff以外，我们也可以使用unity中的内置函数，它对应的 <code>gray_coeff</code> 为fixed3(0.22, 0.707, 0.071)<br>另外，通过在lerp的时候增加一个系数，我将暗部的亮度稍微提高了下，弥补曝光不足的情况。</p>
+<h4 id="No-的偏移"><a href="#No-的偏移" class="headerlink" title="No.的偏移"></a>No.的偏移</h4><p>刚才的卷积核只是一个理想状态的演示，实际上，由于任意两个纹素是相邻的，所以只能在一个纹素的两边（看成一个正方形）上进行边的绘制。否则，两个相邻纹素在交界处都绘上黑边会导致扫描线过粗。另外，如果直接采样，将会出现平顶的情况，也即是当边上为偶数个像素的时候，中间会出现高度一样的状况。于是需要对之前的pixel_no进行偏移，偏移之后将会打破原有的平衡，找到一个新的中心。这里的偏移值应该小于1/(column * 2)，否则循环周期将会出问题。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">float</span> delta = dist(frac(pixel_no + float2(<span class="number">-0.125</span>, <span class="number">0.125</span>)), offset + float2(<span class="number">0.5</span>, <span class="number">0.5</span>));</span><br></pre></td></tr></table></figure></p>
+ <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/before_offset.jpg" alt title>
+ <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/after_offset.jpg" alt title>
+<p>通过对比可以看出，偏移之后，左侧和上侧的亮度明显变暗，亮度会表现的更集中在中间的一个点。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/different_subdivision_level.png" alt title="图所示为不同粒度下的表现"></p>
+<h4 id="采样的偏移"><a href="#采样的偏移" class="headerlink" title="采样的偏移"></a>采样的偏移</h4><p>为了给物体增加一些投影，特别是文字，会对当前像素点的周围采样。我们并不是直接用相邻像素采样（相邻像素很有可能来自于同一纹素，所以采样没有意义），而是偏移一段距离，这和ps中的投影是一个原理。只是这里需要特别注意一个问题，也即是之前看到的一张图中出现的黑边问题。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/dotnbloombig.png" alt title="注意人物轮廓周围的小黑边"><br>这个问题的起因是：如果采样点之间始终距离为一个纹素的时，虽然能保证取到的都是周围的纹素，但当图像中文本的边界正好是处于格子的边缘（也就是亮度最低的位置）在经历一个周期后，亮度是最低的地方（周期性所致）就会对之前还在暗色边界范围内的像素采样，这样就会出现在一个白的背景上出现了一条黑边。<br>解决方法就是将采样偏移限制在纹素所包含的像素个数之内，虽然这意味着我们的投影无法超过一个纹素，但是起码会避免一些比较糟糕的情况。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/problem_of_blackline.png" alt title><br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/problem_of_blackline_solved.png" alt title></p>
+<h4 id="欧氏距离与曼哈顿距离的选择"><a href="#欧氏距离与曼哈顿距离的选择" class="headerlink" title="欧氏距离与曼哈顿距离的选择"></a>欧氏距离与曼哈顿距离的选择</h4><p>前面在谈到权重的时候，我们的图示标注出来的是欧几里得距离，那么如果为了将指令减少几条，变成曼哈顿距离如何呢？结果是：并不好<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/euclid_dist.jpg" alt title="可以看出，形成了一个明显的十字亮斑，并且高度差异并区分度不高"><br>另外值得一提的是，由于编译器和显卡的优化，使用曼哈顿距离并不能节省什么开销。<br><br></p>
+<h2 id="增加bloom"><a href="#增加bloom" class="headerlink" title="增加bloom"></a>增加bloom</h2><p>Bloom能起到加光晕的效果，能进一步降低粗糙感。通常来说，bloom只是作为HDR的一环，过程还可以包括Tone Mapping、Bright Pass Filter以及Blur。但由于我们这里只考虑2D的情况，更多时候HDR可以由美术手工实现，所以我们先不讨论ToneMapping而简单实现Bright和Blur。</p>
+<p>1    混合横向的bloom和纵向的bloom<br>比较常见的bloom中的blur过程分为两次，一次横向像素上的模糊，一次纵向像素上的模糊，两次叠加。但是我们为了省力，也可以在一个pass中进行，毕竟我们只是为了虚化边缘，制造投影的效果。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">fixed4 <span class="title">Pass_SimpleBloom</span><span class="params">(float2 uv)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    float4 sum = float4(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">    float4 bum = float4(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">    </span><br><span class="line">    float2 glareSize = float2(<span class="number">1.0</span> / <span class="number">512</span>, <span class="number">1.0</span> / <span class="number">384</span>) * <span class="number">0.65</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> height = <span class="number">3</span>;</span><br><span class="line">    <span class="keyword">int</span> width = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">int</span> i = -width; i &lt; width; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> j = -height; j &lt; height; ++j)</span><br><span class="line">        &#123;</span><br><span class="line">            sum += tex2D(_MainTex, uv + float2(i, j) * glareSize);</span><br><span class="line">            bum += tex2D(_MainTex, uv + float2(j, i) * glareSize);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fixed4 color = PREVIOUS_PASS(uv);</span><br><span class="line">    color = (sum*sum*<span class="number">0.001</span> + bum*bum*<span class="number">0.0080</span>) * _Amount / ((<span class="number">2</span>* height +<span class="number">1</span>) *(<span class="number">2</span>* width +<span class="number">1</span>)) + color*_Power;</span><br><span class="line">    <span class="keyword">return</span> color;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="renderTexture与multipass"><a href="#renderTexture与multipass" class="headerlink" title="renderTexture与multipass"></a>renderTexture与multipass</h3><p>Bloom的操作我并没有在ppsspp模拟器中实施，主要原因是我不知道如何在ppsspp中实现真正的multi-pass shader，如果只是通过宏将pass折叠起来，由于bloom需要对周围采样，将会导致计算量指数式上涨。<br>但是这一切在unity中就很容易解决了，只需要在第一遍的pass中将bloom后的输出输出到render texture就可以被后面的shader所利用，两者加起来的时间测试下来大概只有single-pass的1/5，优化效果还是非常明显的。<br><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">RenderTexture rtTemp = RenderTexture.GetTemporary(src.width, src.height);</span><br><span class="line">Graphics.Blit(src, rtTemp, _Material_1);</span><br><span class="line">Graphics.Blit(rtTemp, dst, _Material_2);</span><br><span class="line">RenderTexture.ReleaseTemporary(rtTemp);</span><br></pre></td></tr></table></figure></p>
+ <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/performance_single.png" alt title="优化之前几乎所有的时间都耗在了最后一个drawIndexed上">
+ <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/performance.png" alt title>
+<p>可以看出分割出两个pass之后开销一下平衡很多。另外，unity中在利用RenderTexture.GetTemporary时，内部会调用<a href="https://docs.unity3d.com/ScriptReference/RenderTexture.DiscardContents.html" target="_blank" rel="noopener">DiscardContents</a> ，因而对CPU的效率也有所提升。详情可以参考<a href="https://docs.unity3d.com/ScriptReference/RenderTexture.GetTemporary.html" target="_blank" rel="noopener">官方文档</a>。<br>增加了bloom之后的效果图。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/3xScaled.png" alt title><br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/result.jpg" alt title><br><br></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/en/tags/graphics/" rel="tag"># graphics</a>
+          
+            <a href="/en/tags/shader/" rel="tag"># shader</a>
+          
+            <a href="/en/tags/game/" rel="tag"># game</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/en/2017/07/03/from_pixel_to_screen_2/" rel="prev" title="从像素之间谈起：像素游戏的画面增强（下）">
+                从像素之间谈起：像素游戏的画面增强（下） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+    </div>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  
+  <aside id="sidebar" class="sidebar sidebar-hide">
+    
+      <div id="sidebar-dimmer"></div>
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <!--<li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>-->
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/en/images/avatar.png" alt="tasiYokan">
+          <p class="site-author-name" itemprop="name">tasiYokan</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/en/archives/">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">posts</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/en/categories/index.html">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">categories</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/en/tags/index.html">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#无所不在的像素画"><span class="nav-number">1.</span> <span class="nav-text">无所不在的像素画</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#分类"><span class="nav-number">1.1.</span> <span class="nav-text">分类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#再现像素画"><span class="nav-number">1.2.</span> <span class="nav-text">再现像素画</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#一个shader的实现思路"><span class="nav-number">2.</span> <span class="nav-text">一个shader的实现思路</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#格子的分割"><span class="nav-number">2.1.</span> <span class="nav-text">格子的分割</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#硬分割"><span class="nav-number">2.1.1.</span> <span class="nav-text">硬分割</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#丰富分割细节"><span class="nav-number">2.1.2.</span> <span class="nav-text">丰富分割细节</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#一些细节"><span class="nav-number">2.1.3.</span> <span class="nav-text">一些细节</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#滤波器的构成"><span class="nav-number">2.1.3.1.</span> <span class="nav-text">滤波器的构成</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#No-的偏移"><span class="nav-number">2.1.3.2.</span> <span class="nav-text">No.的偏移</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#采样的偏移"><span class="nav-number">2.1.3.3.</span> <span class="nav-text">采样的偏移</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#欧氏距离与曼哈顿距离的选择"><span class="nav-number">2.1.3.4.</span> <span class="nav-text">欧氏距离与曼哈顿距离的选择</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#增加bloom"><span class="nav-number">2.2.</span> <span class="nav-text">增加bloom</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#renderTexture与multipass"><span class="nav-number">2.2.1.</span> <span class="nav-text">renderTexture与multipass</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">tasiYokan</span>
+</div>
+
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+      
+  <div class="expand-toc">
+    <i class="fa fa-list-ol"></i>
+    
+  </div>
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/en/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/en/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/en/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/en/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/en/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/en/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/en/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/en/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/en/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/en/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/en/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/en/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/en/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/en/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+</body>
+</html>
