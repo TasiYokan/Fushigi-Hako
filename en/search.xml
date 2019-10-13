@@ -4,7 +4,7 @@
   
     
     <entry>
-      <title>大规模建筑内景的渲染：Interior-Mapping</title>
+      <title>Rendering building interior on a flat surface：Interior-Mapping</title>
       <link href="/en/2019/09/14/implementation-of-interior-mapping/"/>
       <url>/en/2019/09/14/implementation-of-interior-mapping/</url>
       
@@ -110,7 +110,7 @@
     
     
     <entry>
-      <title>制作不使用贴图的水滴特效</title>
+      <title>Making raindrops post processing without a texture</title>
       <link href="/en/2019/07/31/raindrop-effect/"/>
       <url>/en/2019/07/31/raindrop-effect/</url>
       
@@ -137,7 +137,7 @@
     
     
     <entry>
-      <title>从像素之间谈起：像素游戏的画面增强（下）</title>
+      <title>Talking of Pixels：Enhancement of Pixel Art (Second Part)</title>
       <link href="/en/2017/07/03/from_pixel_to_screen_2/"/>
       <url>/en/2017/07/03/from_pixel_to_screen_2/</url>
       
@@ -166,7 +166,7 @@
     
     
     <entry>
-      <title>从像素之间谈起：像素游戏的画面增强（上）</title>
+      <title>Talking of Pixels：Enhancement of Pixel Art (First Part)</title>
       <link href="/en/2017/07/02/from_pixel_to_screen_1/"/>
       <url>/en/2017/07/02/from_pixel_to_screen_1/</url>
       
