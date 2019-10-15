@@ -202,7 +202,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-language"></i> <br>
             
-            中文语言
+            EN -> 中文
           </a>
         </li>
         
@@ -356,7 +356,7 @@
     }
 
     // Switch directly as the load may take a while
-    swithlang();
+    // swithlang();
 
     window.onmousedown = function() {
         swithlang();
@@ -473,8 +473,12 @@
 
       
         
-          <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/imp-interior-mapping/1.0_cover.png" alt title="最终的效果图">
-<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>Interior Mapping主要用于在物体表面利用透视错局模拟出格子结构的内部内容。虽然从外部观察起来，物体内部的构造是“真实的”，但一切渲染都没有依靠更多的模型或真实顶点。这在渲染大量模式化的内部结构中会有很大作用。<br>例如渲染高楼林立的都市时，如果要渲染每个单独的房间就会有大量的性能开销，完全的使用单一的贴图又会有些单调，这个时候就适合用Interior Mapping来伪造出建筑的外观而不让性能下降太多。<br>它的几个优点：<br>1.房间的数量不会影响framerate或内存开销<br>2.并不需要太多的额外资源就可以表现大的场景<br>3.实现上并不要求高级的shader model特性<br>
+          <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/imp-interior-mapping/1.0_cover.png" alt title="The final result">
+<h1 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h1><p>Interior Mapping is a great way to display the building interior making use of optical illusion. While it does render the real room of a building from outside, all the work has been done without any extra vertices. This definitely sounds great to any performance insensive scenes.<br>A Greate example to illustrate this could be a game scene located at a CBD where rendering each instance could be an aweful overhead for performance. Considering the obvious pattern we would see if we use the same texture for each room. Interior mapping turns out to be a compromising way to make it look good while maintaining the high fps.<br>This technique has several advantages in summary:</p>
+<ol>
+<li>The framerate or memory cost is independent from the amount of rooms. Actually, you can put as many room as you want into the scene, the performance would be exactly the same.</li>
+<li>Since we can use the same wall many times for a building, we can render a “complex” scene with a little resources.</li>
+<li>It requires no extra advance shader model featuers. Say the common SM3 model is pretty enough.
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/en/2019/09/14/implementation-of-interior-mapping/#more" rel="contents">
@@ -484,7 +488,7 @@
           <!--/noindex-->
         
       
-    </p></div>
+    </li></ol></div>
 
     <div>
       
