@@ -77,7 +77,7 @@
 <link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
 
 
-  <meta name="keywords" content="game,graphics,shader,">
+  <meta name="keywords" content="graphics,shader,game,">
 
 
 
@@ -94,7 +94,7 @@
 
 
 <meta name="description" content="简介Interior Mapping主要用于在物体表面利用透视错局模拟出格子结构的内部内容。虽然从外部观察起来，物体内部的构造是“真实的”，但一切渲染都没有依靠更多的模型或真实顶点。这在渲染大量模式化的内部结构中会有很大作用。例如渲染高楼林立的都市时，如果要渲染每个单独的房间就会有大量的性能开销，完全的使用单一的贴图又会有些单调，这个时候就适合用Interior Mapping来伪造出建筑的外观">
-<meta name="keywords" content="game,graphics,shader">
+<meta name="keywords" content="graphics,shader,game">
 <meta property="og:type" content="article">
 <meta property="og:title" content="大规模建筑内景的渲染：Interior-Mapping">
 <meta property="og:url" content="http://yoursite.com/2019/09/14/implementation-of-interior-mapping/index.html">
@@ -132,7 +132,7 @@
 <meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/imp-interior-mapping/4.1_wrong_corner_spider_man.png">
 <meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/imp-interior-mapping/4.1_correct_corner.png">
 <meta property="og:image" content="https://forum.unity.com/attachments/interiormapping-cubemap-jpg.198474/">
-<meta property="og:updated_time" content="2019-10-13T13:46:03.164Z">
+<meta property="og:updated_time" content="2019-10-19T03:23:54.980Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="大规模建筑内景的渲染：Interior-Mapping">
 <meta name="twitter:description" content="简介Interior Mapping主要用于在物体表面利用透视错局模拟出格子结构的内部内容。虽然从外部观察起来，物体内部的构造是“真实的”，但一切渲染都没有依靠更多的模型或真实顶点。这在渲染大量模式化的内部结构中会有很大作用。例如渲染高楼林立的都市时，如果要渲染每个单独的房间就会有大量的性能开销，完全的使用单一的贴图又会有些单调，这个时候就适合用Interior Mapping来伪造出建筑的外观">
@@ -553,7 +553,7 @@
 <p>这样有了两个部分后，一个完整的Projection Matrix就可以表示为<br>$$<br>[M_{Proj}] =<br>\left[<br>\begin{array}{cccc}<br>    \frac{1}{-z_{view}}\\<br>    \frac{1}{-z_{view}}\\<br>    \frac{1}{-z_{view}}\\<br>    N/A<br>\end{array}<br>\right ]^{\mathsf{T}}<br>\left[<br>\begin{array}{cccc}<br> \frac{ {2n} }{ {r-l} } &amp; 0 &amp; \frac{ {r+l} }{ {r-l} }  &amp; 0 \\<br> 0 &amp; \frac{ {2n} }{ {t-b} } &amp; \frac{ {t+b} }{ {t-b} }  &amp; 0 \\<br> 0 &amp; 0                      &amp; \frac{ {-(f+n)} }{ {f-n} } &amp; \frac{ {-2fn} }{ {f-n} } \\<br> 0 &amp; 0 &amp; -1 &amp; 0<br>\end{array}<br>\right ]<br>$$</p>
 <p>如果直接使用frag shader的输入中的position（通过SV_POSITION这个语义绑定(semantics binding) ）的xy分量来映射billboard的uv，我们可以得到一个屏幕空间下的映射，但是使用的其实就是类似于gl_FragCoord的屏幕坐标值，并不能适应我们后面的调整需要。另外补充一下，SV_POSITION虽然在vert shader还是Clip Space，但是在进入frag shader之前会进行Perspective Divide（在某些硬件下这部分的计算会交给frag shader，但是仍处于可编程部分之前，所以可以通俗的认为都发生在frag shader之前）从而SV_POSITION就进入了NDC也即就行了透视处理。<br>虽然Unity中DirectX和OpenGL或Vulkan对projection matrix的实现各不相同，但是他们的w分量都是$Z_{view}$(虽然Projection Matrix中$w = -Z_{view}$，但在前一步的View Matrix时已经取反了一次)，所以除以这个w分量就能将坐标压缩到NDC完成透视变换。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/imp-interior-mapping/3.3_unity_matrix.png" alt title><br>屏幕空间下的值只能使用NDC来插值，Clip Space下坐标和View Space成“线性”关系，和World Space成affine关系。</p>
 <p>虽然frag shader中的输入SV_POSITION的z值已经是NDC下的，但是因为我们后面会要计算相对参考点的位置，而参考点又都没有进行透视处理，所以为了方便起见，我们统一在Clip Space进行处理，最后一步的时候再转换到NDC空间。<br>而要获得像素点在Clip Space下的坐标，我们有两种方法，<br>一种是对已经进入到ndc的坐标逆向乘以w分量从而得到Clip Space坐标。不过因为SV_POSITION本身并不属于NDC，所以我们不能通过这种方法获取除z以外的其他Clip Space中的坐标<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">float</span> depth = i.pos.z * i.pos.w;</span><br><span class="line"><span class="keyword">return</span> half4(depth, depth, depth, <span class="number">1</span>); <span class="comment">// Ouput depth visualization</span></span><br></pre></td></tr></table></figure></p>
-<p>还有一种方法是现在vert shader中将Clip Space坐标保存成一个顶点属性，然后交由硬件插值后传入frag shader。这里的重要区别是，GPU不会对没有标记SV_POSITION的顶点属性进行Perspective Divide和ViewPort Transform，进行的是含透视矫正的插值。由于是含透视矫正的，所以对于插值的属性，它按在Clip Space的深度进行插值，也就是说它的坐标值准确的对应于Clip Space下该frag的坐标。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">float</span> depth = i.pos_clip.z;</span><br><span class="line"><span class="keyword">return</span> half4(depth, depth, depth, <span class="number">1</span>); <span class="comment">// Ouput depth visualization</span></span><br></pre></td></tr></table></figure></p>
+<p>还有一种方法是先在vert shader中将Clip Space坐标保存成一个顶点属性，然后交由硬件插值后传入frag shader。这里的重要区别是，GPU不会对没有标记SV_POSITION的顶点属性进行Perspective Divide和ViewPort Transform，进行的是含透视矫正的插值。由于是含透视矫正的，所以对于插值的属性，它按在Clip Space的深度进行插值，也就是说它的坐标值准确的对应于Clip Space下该frag的坐标。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">float</span> depth = i.pos_clip.z;</span><br><span class="line"><span class="keyword">return</span> half4(depth, depth, depth, <span class="number">1</span>); <span class="comment">// Ouput depth visualization</span></span><br></pre></td></tr></table></figure></p>
 <p>有意思的是，如果我们将Clip Space坐标除以了w之后就可以得到NDC空间下的屏幕坐标，可以用来当uv采样texture看看是不是如我们期望的一样。<br>核心代码如下<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">v2f</span> &#123;</span></span><br><span class="line">    float4 pos:     SV_POSITION;</span><br><span class="line">    float2 uv:      TEXCOORD0;</span><br><span class="line">    float4 pos_clip:TEXCOORD1;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="function">v2f <span class="title">vert</span><span class="params">(appdata_all v)</span> </span>&#123;</span><br><span class="line">    v2f o;</span><br><span class="line">    ...</span><br><span class="line">    o.pos = UnityObjectToClipPos(v.vertex);</span><br><span class="line">    o.pos_clip = UnityObjectToClipPos(v.vertex);</span><br><span class="line">    <span class="keyword">return</span> o;</span><br><span class="line">&#125;</span><br><span class="line">half4 frag(v2f i) : COLOR &#123;</span><br><span class="line">    <span class="keyword">return</span> tex2D(_MainTex, frac(i.pos_clip.xy / i.pos_clip.w));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
  <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/imp-interior-mapping/3.4_rotate_first_billboard.gif" alt title>
 <p>但是我们也会注意到一个问题，这是一个“真的”billboard，uv的中心也始终在屏幕（也就是摄像机）的中央，如果将摄像机进行平移，就会失去中心点。另外，随着摄像机的拉近和拉远也没有缩放效果。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/imp-interior-mapping/3.5_static_scale.gif" alt title="这与其说是billboard，倒不如说更像是个用几何体的轮廓制作的Mask"></p>
@@ -569,7 +569,7 @@
 <p>再将新的offset传入后，就能看到tilied的sprite了<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/imp-interior-mapping/3.8_tiled_billboard.gif" alt title></p>
 <p><span id="anchro_adjust"></span><br>目前物体的旋转中心还是在物体的中央（每个block的(0.5,0.5,0.5)处）。我们要调整的是offset，因为它是我们认为的参考点（anchor），所以还要做一步偏移操作。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Move the anchor to feet</span></span><br><span class="line">float3 center_block = float3(<span class="number">0.5</span>, <span class="number">0.5</span>, <span class="number">0.5</span>) + float3(<span class="number">0</span>, <span class="number">-0.3</span>, <span class="number">0</span>);</span><br><span class="line">float3 offsetFromFloor_block = frac(<span class="number">1</span> + sign(i.pos_obj) * center_block);</span><br><span class="line">float3 offset_obj = sign(i.pos_obj) </span><br><span class="line">    * d * (offsetFromFloor_block + <span class="built_in">floor</span>(<span class="built_in">abs</span>(i.pos_obj * <span class="number">0.999</span>) / d));</span><br><span class="line">float3 intrudeDir_obj = normalize(offset_obj - cameraPos_obj);</span><br><span class="line">float2 uv_ndc = GetNdcUv(clipPos, _UvTiling, offset_obj.xyz - _Offset.w * intrudeDir_obj));</span><br></pre></td></tr></table></figure></p>
  <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/imp-interior-mapping/3.9_align_to_anchor.gif" alt title="我将anchor gizmos放到了billboard在的中心，可以看到无论如何旋转相机，billboard的uv都能和它保持相对静止">
-<p>为了验证我们的计算没有错误，我们可以比较虚拟billboard是否和真实的billboard有一样的现实。我在场景里放了一块传统的billboard，放置在和虚拟billboard同样的anchor点，然后旋转物体进行观察。结果可以看到两者完全重合在一起，证明了算法的准确性。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/imp-interior-mapping/3.10_compare_with_real_billboard.gif" alt title="你能发现藏在box中的真正的billboard吗"></p>
+<p>为了验证我们的计算没有错误，我们可以比较虚拟billboard是否和真实的billboard有一样的显示。我在场景里放了一块传统的billboard，放置在和虚拟billboard同样的anchor点，然后旋转物体进行观察。结果可以看到两者完全重合在一起，证明了算法的准确性。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/imp-interior-mapping/3.10_compare_with_real_billboard.gif" alt title="你能发现藏在box中的真正的billboard吗"></p>
 <p><img src="https://4.bp.blogspot.com/-fjxkTPOjjFY/W6YYGka4GeI/AAAAAAAAHZM/Z3cqOgvNANY76Ho3-_B81p1ZdmHa2j2DwCLcBGAs/s1600/Interior%2BMapping%2B-%2BFurniture.jpg" alt title=" 比较论文中的家具层的效果，可以看到会在某种程度上减小flat感"><br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/imp-interior-mapping/3.11_final_result.gif" alt title="最终效果"></p>
 <p><span id="culling_Wall"></span></p>
 <h1 id="正确显示边角的遮挡"><a href="#正确显示边角的遮挡" class="headerlink" title="正确显示边角的遮挡"></a>正确显示边角的遮挡</h1><p>最后一步是，如果墙面正好在房间的外部一些，即我们的mesh之外一点。虽然表面上采样的点属于内腔，从正面看是不会看到遮挡的墙，但是从另一个角度看，则会看到本该被剔除的墙面。一般发生在墙面的转角处。这一点甚至在PS4 Spider-Man中都没有处理<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/imp-interior-mapping/4.1_wrong_corner_spider_man.png" alt title="注意画面左侧的墙面，本应该是窗户但是却显示了墙壁"><br>完整视频参考：</p>
@@ -608,11 +608,11 @@
       
         <div class="post-tags">
           
-            <a href="/tags/game/" rel="tag"># game</a>
-          
             <a href="/tags/graphics/" rel="tag"># graphics</a>
           
             <a href="/tags/shader/" rel="tag"># shader</a>
+          
+            <a href="/tags/game/" rel="tag"># game</a>
           
         </div>
       
