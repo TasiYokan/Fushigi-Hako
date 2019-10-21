@@ -93,34 +93,18 @@
 
 
 
-<meta name="description" content="上篇见 从像素之间谈起：像素游戏的画面增强（上） 其他可能的改进投影增强前面我们在进行扩散投影模拟的时候，是同时对周围八个点进行采样，但是事实上，有时为了控制投影的方向，可以只对一侧的点进行采样">
+<meta name="description" content="Previous one Talking of Pixels：Enhancement of Pixel Art (Part 1) Sorry, English version of this post is currently not ready. I am working hard on it.You can have a glimps of Chinese version if you lik">
 <meta name="keywords" content="graphics,shader,game">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Talking of Pixels：Enhancement of Pixel Art (Second Part)">
+<meta property="og:title" content="Talking of Pixels：Enhancement of Pixel Art (Part 2)">
 <meta property="og:url" content="http://yoursite.com/2017/07/03/from_pixel_to_screen_2/index.html">
 <meta property="og:site_name" content="不思議な箱">
-<meta property="og:description" content="上篇见 从像素之间谈起：像素游戏的画面增强（上） 其他可能的改进投影增强前面我们在进行扩散投影模拟的时候，是同时对周围八个点进行采样，但是事实上，有时为了控制投影的方向，可以只对一侧的点进行采样">
+<meta property="og:description" content="Previous one Talking of Pixels：Enhancement of Pixel Art (Part 1) Sorry, English version of this post is currently not ready. I am working hard on it.You can have a glimps of Chinese version if you lik">
 <meta property="og:locale" content="en">
-<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/sample_weight_partial.png">
-<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/unilateral_sample.png">
-<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/darkness_offset.png">
-<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/lightness_offset.png">
-<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/approx_1.jpg">
-<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/approx_2.png">
-<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/Overexposed.png">
-<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/ToScreen5.png">
-<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/psp_firstpass_cut.png">
-<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/zipped_To1.png">
-<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/zipped_To2.jpg">
-<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/zipped_To3.jpg">
-<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/zipped_To4.jpg">
-<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/zipped_To5.jpg">
-<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/zipped_To6.jpg">
-<meta property="og:updated_time" content="2019-10-13T16:18:31.242Z">
+<meta property="og:updated_time" content="2019-10-21T14:54:45.366Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Talking of Pixels：Enhancement of Pixel Art (Second Part)">
-<meta name="twitter:description" content="上篇见 从像素之间谈起：像素游戏的画面增强（上） 其他可能的改进投影增强前面我们在进行扩散投影模拟的时候，是同时对周围八个点进行采样，但是事实上，有时为了控制投影的方向，可以只对一侧的点进行采样">
-<meta name="twitter:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/sample_weight_partial.png">
+<meta name="twitter:title" content="Talking of Pixels：Enhancement of Pixel Art (Part 2)">
+<meta name="twitter:description" content="Previous one Talking of Pixels：Enhancement of Pixel Art (Part 1) Sorry, English version of this post is currently not ready. I am working hard on it.You can have a glimps of Chinese version if you lik">
 
 
 
@@ -154,7 +138,7 @@
 
 
 
-  <title>Talking of Pixels：Enhancement of Pixel Art (Second Part) | 不思議な箱</title>
+  <title>Talking of Pixels：Enhancement of Pixel Art (Part 2) | 不思議な箱</title>
   
 
 
@@ -420,7 +404,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">Talking of Pixels：Enhancement of Pixel Art (Second Part)</h1>
+          <h1 class="post-title" itemprop="name headline">Talking of Pixels：Enhancement of Pixel Art (Part 2)</h1>
         
 
         <div class="post-meta">
@@ -500,18 +484,8 @@
       
 
       
-        <p>上篇见 <a href="/2017/07/02/from_pixel_to_screen_1/">从像素之间谈起：像素游戏的画面增强（上）</a></p>
-<h1 id="其他可能的改进"><a href="#其他可能的改进" class="headerlink" title="其他可能的改进"></a>其他可能的改进</h1><h2 id="投影增强"><a href="#投影增强" class="headerlink" title="投影增强"></a>投影增强</h2><p>前面我们在进行扩散投影模拟的时候，是同时对周围八个点进行采样，但是事实上，有时为了控制投影的方向，可以只对一侧的点进行采样<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/sample_weight_partial.png" alt title><br><a id="more"></a><br>如图所示，只需要对右下角的五个格子采样，就可以模拟出左上角的光照。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/unilateral_sample.png" alt title><br>这样造成的效果是亮的部分会凸起，暗的部分会产生凹陷的效果<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/darkness_offset.png" alt title><br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/lightness_offset.png" alt title></p>
-<h2 id="函数的拟合"><a href="#函数的拟合" class="headerlink" title="函数的拟合"></a>函数的拟合</h2><p>前面在计算相邻点的加权颜色值时，用到了一个指数函数。指数函数的效果的确很好，考虑到在某些平台上exp的消耗可能有点大。另外，任意两个像素之间的欧几里得距离不会超过2.3个像素，所以我们尝试对函数进行一个拟合，如0.926+1.441x + 0.6578x^2 + 0.0417x^4<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/approx_1.jpg" alt title><br>其实我们还可以将把它化成1/(7x^2 +1)，效果也还可以，只是无论是哪种情况，在PC上测试差距并不明显（也有可能适得其反）<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/approx_2.png" alt title></p>
-<h2 id="扫描线"><a href="#扫描线" class="headerlink" title="扫描线"></a>扫描线</h2><p>考虑到有些游戏中，会出现一些因为曝光过度而无法显示扫描线的情况。于是，我们就需要对扫描线进行加强：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">float</span> limit = <span class="number">1</span> - step(<span class="number">257.0</span>, min(frac(i.pixel_no.x), <span class="number">1</span>- frac(i.pixel_no.y)) * _MainTex_TexelSize.z);</span><br><span class="line"><span class="keyword">float</span> bright = Luminance(out_color);</span><br><span class="line"><span class="keyword">return</span> fixed4(out_color *(<span class="number">1.8</span> - limit * bright * bright * <span class="number">0.89</span>), <span class="number">1.0</span>);</span><br></pre></td></tr></table></figure></p>
-<p>但是对于某些偏暗的游戏，如果为了提高整体亮度，而扫描线同时也强化的很厉害，那么就会导致“碳化”<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/Overexposed.png" alt title="中间的白色由于亮度过高，在补偿的时候会显得非常暗"><br>虽然这样的扫描线加强在其他场合正是我们需要的，但在这里只会让画面变得很脏。关于这个问题并没有很好的解决方案，这需要根据不同游戏对参数做出调整。作为游戏开发，如果美术风格及早的确定，颜色的选择有所参照，将会对程序的优化有极大的帮助。而2D像素游戏由于很少受光照影响，再加上像素画本身也极其依赖于palette，所以如果palette控制的好，是可以根据其调试出一个很好的状态的。</p>
-<p>由于目前只用针对一款游戏，所以上面的手工调整可以接受。如果我们需要大量的调整，我在想，可能还有一种思路是像tone mapping一样，将亮度映射在一个合理的区域内，这样既保留了细节又处理了边界状况。</p>
-<h2 id="Tactics-Ogre的特殊处理"><a href="#Tactics-Ogre的特殊处理" class="headerlink" title="Tactics Ogre的特殊处理"></a>Tactics Ogre的特殊处理</h2><p>刚开始我为Taactic Ogre（中文译为：皇家骑士团）写shader的时候，出现了一个问题。由于很容易知道psp的分辨率是480*272，我就将其硬编码到shader中。但是却出现了一些意想不到的状况。在横坐标方向上，扫描线的分布不均匀。由于是周期性的，并且随着窗口的扩大问题更为严重，我最开始猜测是模拟器的精度出现了问题，我查了下changelog也的确提到了这个问题，只是我使用的版本应该已经修复了这个问题。另外，我测试了其他的游戏，发现一切都很正常，如果真的是精度问题，不该只出现在这一款游戏上。查看了整个render过程后发现Tactics Ogre中有些地方与其他游戏做的不同，比如<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/ToScreen5.png" alt title="注意纹理右侧的黑边"><br>Tactics Ogre在draw顶部的滚动文本时，并不会对其裁剪，而是放到了第二个color pass里才进行裁剪<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/psp_firstpass_cut.png" alt title><br>不过ppsspp模拟器提供了u_texelDelta这样一个uniform，我们可以利用它得知当前输入纹理的resolution：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vec2 c_resolution = <span class="number">1.0f</span> / u_texelDelta;</span><br></pre></td></tr></table></figure></p>
-<p>这样，即使在某些场景中，屏幕的分辨率发生变化，我们也能够保证显示正确的扫描线。<br><br></p>
-<h1 id="最终PSP模拟器效果图"><a href="#最终PSP模拟器效果图" class="headerlink" title="最终PSP模拟器效果图"></a>最终PSP模拟器效果图</h1><p>在这里给出自己制作的在PSP模拟器上的最终效果，请放大后观察<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/zipped_To1.png" alt title><br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/zipped_To2.jpg" alt title><br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/zipped_To3.jpg" alt title><br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/zipped_To4.jpg" alt title><br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/zipped_To5.jpg" alt title><br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/crt/zipped_To6.jpg" alt title><br><br></p>
-<h1 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h1><p>本文主要讨论了针对细像素游戏的画质增强，但是这并不意味着像素游戏的增强方式只有一种，相反，光是<a href="http://filthypants.blogspot.jp/2015/04/more-crt-shaders.html" target="_blank" rel="noopener">这里</a> 就提到多种后期特效。我们也无法说哪种效果比另一种更好。更多的时候，还是需要根据对游戏的定位来定制自己的后期特效，从而让画面为游戏核心服务。程序和美术之间的沟通是否充分也是能否有效的构建出成功的游戏画面中很重要的一个因素。</p>
-<p>最后，你们觉得这是一篇讨论像素游戏中画面增强的文章吗？<br>不，不是的，我只是在安利Tactics Ogre :P</p>
-<p>另：为防止图床炸裂，请勿随意转载:)</p>
+        <p>Previous one <a href="/2017/07/02/from_pixel_to_screen_1/">Talking of Pixels：Enhancement of Pixel Art (Part 1)</a></p>
+<p>Sorry, English version of this post is currently not ready. I am working hard on it.<br>You can have a glimps of Chinese version if you like ;)</p>
 
       
     </div>
@@ -558,8 +532,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/en/2017/07/02/from_pixel_to_screen_1/" rel="next" title="Talking of Pixels：Enhancement of Pixel Art (First Part)">
-                <i class="fa fa-chevron-left"></i> Talking of Pixels：Enhancement of Pixel Art (First Part)
+              <a href="/en/2017/07/02/from_pixel_to_screen_1/" rel="next" title="Talking of Pixels：Enhancement of Pixel Art (Part 1)">
+                <i class="fa fa-chevron-left"></i> Talking of Pixels：Enhancement of Pixel Art (Part 1)
               </a>
             
           </div>
@@ -613,108 +587,6 @@
     </div>
   </div>
 
-  
-  <aside id="sidebar" class="sidebar sidebar-hide">
-    
-      <div id="sidebar-dimmer"></div>
-    
-    <div class="sidebar-inner">
-
-      
-
-      
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            Table of Contents
-          </li>
-          <!--<li class="sidebar-nav-overview" data-target="site-overview">
-            Overview
-          </li>-->
-        </ul>
-      
-
-      <section class="site-overview sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-          <img class="site-author-image" itemprop="image" src="/en/images/avatar.png" alt="tasiYokan">
-          <p class="site-author-name" itemprop="name">tasiYokan</p>
-           
-              <p class="site-description motion-element" itemprop="description"></p>
-          
-        </div>
-        <nav class="site-state motion-element">
-
-          
-            <div class="site-state-item site-state-posts">
-              <a href="/en/archives/">
-                <span class="site-state-item-count">7</span>
-                <span class="site-state-item-name">posts</span>
-              </a>
-            </div>
-          
-
-          
-            
-            
-            <div class="site-state-item site-state-categories">
-              <a href="/en/categories/index.html">
-                <span class="site-state-item-count">3</span>
-                <span class="site-state-item-name">categories</span>
-              </a>
-            </div>
-          
-
-          
-            
-            
-            <div class="site-state-item site-state-tags">
-              <a href="/en/tags/index.html">
-                <span class="site-state-item-count">4</span>
-                <span class="site-state-item-name">tags</span>
-              </a>
-            </div>
-          
-
-        </nav>
-
-        
-
-        <div class="links-of-author motion-element">
-          
-        </div>
-
-        
-        
-
-        
-        
-
-        
-
-
-      </section>
-
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
-            
-              
-            
-
-            
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#其他可能的改进"><span class="nav-number">1.</span> <span class="nav-text">其他可能的改进</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#投影增强"><span class="nav-number">1.1.</span> <span class="nav-text">投影增强</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#函数的拟合"><span class="nav-number">1.2.</span> <span class="nav-text">函数的拟合</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#扫描线"><span class="nav-number">1.3.</span> <span class="nav-text">扫描线</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Tactics-Ogre的特殊处理"><span class="nav-number">1.4.</span> <span class="nav-text">Tactics Ogre的特殊处理</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#最终PSP模拟器效果图"><span class="nav-number">2.</span> <span class="nav-text">最终PSP模拟器效果图</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#结语"><span class="nav-number">3.</span> <span class="nav-text">结语</span></a></li></ol></div>
-            
-
-          </div>
-        </section>
-      <!--/noindex-->
-      
-
-      
-
-    </div>
-  </aside>
   
 
 
