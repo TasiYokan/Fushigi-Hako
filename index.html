@@ -473,8 +473,8 @@
 
       
         
-          <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/mesh_quadric_downsampling/1.0_downsampling_cover.png" alt title>
-<h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>Hoppe等人在1993年的时候首先提出了一系列的mesh optimization技术(6)，其中包括edge collapse, edge split, edge swap等操作。基于edge的操作相比较于之前的模型简化（或者说down-sampling）技术，如triangel collapse，最大的好处是能保证模型原始的拓扑结构，因此可以进一步用于其他的geometry processing操作。<br>关于模型化简时选择最合适的边进行collapse，我们需要选择那些坍缩后的边对原有的模型影响最小的边。Hoppe在论文中，使用的是能量方程来判断。但实际情况中，计算的成本过高。因此，在1997年的时候，Garland和Heckbert等人提出了一种基于Quaderic Error的度量标准(5)来判断最合适的顶点。<br>
+          <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/mesh_quadric_downsampling/0_downsampling_cover.png" alt title>
+<h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>Hoppe等人在1993年的时候首先提出了一系列的mesh optimization技术<a href="#ref">[6]</a>，其中包括edge collapse, edge split, edge swap等操作。基于edge的操作相比较于之前的模型简化（或者说down-sampling）技术，如triangel collapse，最大的好处是能保证模型原始的拓扑结构，因此可以进一步用于其他的geometry processing操作。<br>关于模型化简时选择最合适的边进行collapse，我们需要选择那些坍缩后的边对原有的模型影响最小的边。Hoppe在论文中，使用的是能量方程来判断。但实际情况中，计算的成本过高。因此，在1997年的时候，Garland和Heckbert等人提出了一种基于Quaderic Error的度量标准<a href="#ref">[5]</a>来判断最合适的顶点。<br>
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2020/03/07/mesh_quadric_downsampling/#more" rel="contents">
