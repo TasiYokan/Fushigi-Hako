@@ -41,6 +41,8 @@ function WebLocationCheck() {
     }
 }
 
-window.onload = function () {
-    WebLocationCheck();
-}
+// window.onload = function () {
+//     WebLocationCheck();
+// }
+
+WebLocationCheck();
