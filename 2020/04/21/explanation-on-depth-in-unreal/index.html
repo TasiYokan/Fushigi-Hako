@@ -77,7 +77,7 @@
 <link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
 
 
-  <meta name="keywords" content="graphics,shader,">
+  <meta name="keywords" content="shader,game,vfx,unreal,">
 
 
 
@@ -93,26 +93,38 @@
 
 
 
-<meta name="description" content="定义ddx/ddy用于返回屏幕空间中某一值关于x,y方向上的偏导数。它只可以用于fragment program中，参数必须来自fragment的输入。HLSL对ddx的定义：Returns the partial derivative of the specified value with respect to the screen-space x-coordinate.GLSL中对应的函数为d">
-<meta name="keywords" content="graphics,shader">
+<meta name="description" content="背景有时候我们在绘制透明的人物角色时，既想要其透明，又想要有一个基于fresnel的边缘光。直接写出来的材质会遇到透明面的穿插交叠的问题。如 本文会在解决这个问题的同时，对UE4中的scene depth, pixel depth和custom depth这三个容易混淆的概念做个解释和备注。">
+<meta name="keywords" content="shader,game,vfx,unreal">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Notes on ddx&#x2F;ddy">
-<meta property="og:url" content="http://yoursite.com/2019/08/25/Notes-on-ddx-ddy/index.html">
+<meta property="og:title" content="UE中的各种depth的解释及应用">
+<meta property="og:url" content="http://yoursite.com/2020/04/21/explanation-on-depth-in-unreal/index.html">
 <meta property="og:site_name" content="不思議な箱">
-<meta property="og:description" content="定义ddx/ddy用于返回屏幕空间中某一值关于x,y方向上的偏导数。它只可以用于fragment program中，参数必须来自fragment的输入。HLSL对ddx的定义：Returns the partial derivative of the specified value with respect to the screen-space x-coordinate.GLSL中对应的函数为d">
+<meta property="og:description" content="背景有时候我们在绘制透明的人物角色时，既想要其透明，又想要有一个基于fresnel的边缘光。直接写出来的材质会遇到透明面的穿插交叠的问题。如 本文会在解决这个问题的同时，对UE4中的scene depth, pixel depth和custom depth这三个容易混淆的概念做个解释和备注。">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="https://anteru.net/images/2018/pixel-crosstalk.svg">
-<meta property="og:image" content="https://gpuopen.com/wp-content/uploads/2016/08/ds_pattern.png">
-<meta property="og:image" content="https://gpuopen.com/wp-content/uploads/2016/08/qdmode.png">
-<meta property="og:image" content="https://gpuopen.com/wp-content/uploads/2016/08/ds-swizzle-b32.png">
-<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/ddx/mipmap_lod.png">
-<meta property="og:image" content="https://i.stack.imgur.com/VJEqW.png">
-<meta property="og:image" content="http://album.sina.com.cn/pic/002hBfPnzy7dvLft6NX99">
-<meta property="og:updated_time" content="2019-10-13T13:46:03.123Z">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/0_wrong_translucent_object.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/2.1_render_customdepth_checkbox.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/2.2_allow_customdepth_checkbox.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/2.3_customdepth_first_view.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/2.4_customdepth_nodes.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/2.5_disable_depth_test.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/2.6_customdepth_result.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/2.7_pixeldepth_nodes.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/2.8_pixeldepth_result.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/2.9_scenedepth_nodes.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/2.10_pixeldepth_result.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/2.11_backface_fade.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/3.1_pixel_custom_depth_compare_nodes.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/3.2_no_bias_compare_result.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/3.3_bias_compare_result.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/3.4_over_bias_compare_result.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/4.1_translucent_nodes.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/4.2_result_1.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/4.3_result_2.png">
+<meta property="og:updated_time" content="2020-04-21T15:58:42.433Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Notes on ddx&#x2F;ddy">
-<meta name="twitter:description" content="定义ddx/ddy用于返回屏幕空间中某一值关于x,y方向上的偏导数。它只可以用于fragment program中，参数必须来自fragment的输入。HLSL对ddx的定义：Returns the partial derivative of the specified value with respect to the screen-space x-coordinate.GLSL中对应的函数为d">
-<meta name="twitter:image" content="https://anteru.net/images/2018/pixel-crosstalk.svg">
+<meta name="twitter:title" content="UE中的各种depth的解释及应用">
+<meta name="twitter:description" content="背景有时候我们在绘制透明的人物角色时，既想要其透明，又想要有一个基于fresnel的边缘光。直接写出来的材质会遇到透明面的穿插交叠的问题。如 本文会在解决这个问题的同时，对UE4中的scene depth, pixel depth和custom depth这三个容易混淆的概念做个解释和备注。">
+<meta name="twitter:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/0_wrong_translucent_object.png">
 
 
 
@@ -140,13 +152,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2019/08/25/Notes-on-ddx-ddy/">
+  <link rel="canonical" href="http://yoursite.com/2020/04/21/explanation-on-depth-in-unreal/">
 
 
 
 
 
-  <title>Notes on ddx/ddy | 不思議な箱</title>
+  <title>UE中的各种depth的解释及应用 | 不思議な箱</title>
   
 
 
@@ -395,7 +407,7 @@
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <div class="post-inner">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/25/Notes-on-ddx-ddy/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/04/21/explanation-on-depth-in-unreal/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="tasiYokan">
@@ -412,7 +424,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">Notes on ddx/ddy</h1>
+          <h1 class="post-title" itemprop="name headline">UE中的各种depth的解释及应用</h1>
         
 
         <div class="post-meta">
@@ -424,8 +436,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-08-25T19:24:30+08:00">
-                2019-08-25
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-04-21T00:21:51+08:00">
+                2020-04-21
               </time>
             
 
@@ -447,8 +459,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Theory/" itemprop="url" rel="index">
-                    <span itemprop="name">Theory</span>
+                  <a href="/categories/Dev/" itemprop="url" rel="index">
+                    <span itemprop="name">Dev</span>
                   </a>
                 </span>
 
@@ -492,25 +504,23 @@
       
 
       
-        <h1 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h1><p>ddx/ddy用于返回屏幕空间中某一值关于x,y方向上的偏导数。它只可以用于fragment program中，参数必须来自fragment的输入。<br>HLSL对<a href="https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-ddx" target="_blank" rel="noopener">ddx的定义</a>：Returns the partial derivative of the specified value with respect to the screen-space x-coordinate.<br>GLSL中对应的函数为<a href="https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/dFdx.xhtml" target="_blank" rel="noopener">dFdx/dFdy</a></p>
-<a id="more"></a>
-<h1 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h1><p>在triangle rasterization阶段，GPU会对多个像素实例同时运行fragment shader。在最细的程度上，它将会通过SIMD同时跑32-64个像素（实例）。在这些像素中，又会被划分成2 * 2的小组（又被称为quad-fragments），所以每个组会有四个相邻的像素，这样SIMD指令就能同时处理屏幕上2 * 2 = 4个像素了。<br>每个像素中的值都来自于vertex program或其他步骤输出之后得到的插值，所以对于这些值来说，在进入到fragment shader之前就完成了计算，这些是可以并行计算得到的。所以在fragment shader中运行ddx(vertexOuput)的时候，就能知道这个插值的变化导数。</p>
-<p>fragment shader之所以能够访问到相邻像素的数据（即SIMD的不同lanes/thread，每个lanes/thread都处理一个像素），是因为GPU利用了(quad) swizzle进行了跨lanes的数据访问<br><img src="https://anteru.net/images/2018/pixel-crosstalk.svg" alt title="来源：[7]"></p>
-<p>对于AMD的GCN，<code>ds_swizzle_b32</code>指令的offset field是留给<code>ds_pattern</code>的。它有两种模式<a href="#ref">[10]</a>：</p>
-<blockquote>
-<ul>
-<li><strong>Quad-permute mode (QDMode)</strong>: Each of the four adjacent lanes can access each other’s data, and the same switch applies to each set of four. The ds_pattern LSBs directly encode the element ID for each lane.</li>
-<li><strong>Bit-masks mode (BitMode)</strong>: This mode enables limited data sharing within 32 consecutive lanes. Each lane applies bitwise logical operations with constants to its lane ID to produce the element ID from which to read. Constants are encoded in ds_pattern .</li>
-</ul>
-</blockquote>
-<p><img src="https://gpuopen.com/wp-content/uploads/2016/08/ds_pattern.png" alt title="对应的图示"><br>QDMode模式会更清晰一点<br><img src="https://gpuopen.com/wp-content/uploads/2016/08/qdmode.png" alt title="一个简单的例子：分别将原来的0,1,2,3位变成2,1,3,3位"><br><img src="https://gpuopen.com/wp-content/uploads/2016/08/ds-swizzle-b32.png" alt title="过程示意图"></p>
-<h1 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h1><h2 id="1-计算Lod或各向异性-Anisotropy"><a href="#1-计算Lod或各向异性-Anisotropy" class="headerlink" title="1.计算Lod或各向异性(Anisotropy)"></a>1.计算Lod或各向异性(Anisotropy)</h2><p>因为mipmap level需要计算fragmentInput.uv的导数，即相邻像素之间对应纹素的差距。过程是将屏幕坐标的点映射到uv平面上，然后计算出距离。取出最大的一个距离L，并做$log_2⁡L$。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/ddx/mipmap_lod.png" alt title="计算mipmap level图示，来源：[5]"><br>其含义就是如果uv平面中采样点很稀，相应的du/dx或其他的值就比较大，L也相应的比较大。这种情况说明Minification了，很多纹素就堆在了一个像素里。我们实际上用不到这么多纹素，于是一个很高级别的mipmap(更模糊的）就可以用来节省渲染的负担，也可以避免出现锯齿。<br><img src="https://i.stack.imgur.com/VJEqW.png" alt title="计算uv的偏导的图示，来源：[1]"></p>
-<h2 id="2-计算面法线"><a href="#2-计算面法线" class="headerlink" title="2.计算面法线"></a>2.计算面法线</h2><p>在 FragShader 中，调用<code>ddx(i.position)</code>, 和<code>ddy(i.position)</code>可以求出相邻的2 个像素之间座标的差值，即两个像素在三角面上采样的点所构成的向量。下面图中的红色和绿色2个向量即为ddx,ddy所返回的向量<br><img src="http://album.sina.com.cn/pic/002hBfPnzy7dvLft6NX99" alt title="来源：[2]"></p>
-<p>而这2 个向量都在这个三角形的平面上，那么<br><code>normal = normalize(cross(ddx(pos), ddy(pos)))</code><br>就可以求出的面的法线，但是这里要注意，在 HLSL 或者Unity shader里要写成normalize(cross(ddy(pos), ddx(pos))) , 不然法线是反向的。这个是由于左右手座标系引起的。</p>
-<h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><p>嵌套使用ddx(p)或ddy(p)可能导致undefine的值，如ddx(ddx(p))或ddx(ddy(p))。<br>同时，程序假设参数p是连续的。对于嵌在flow-control代码段的值，因为不是每一个在quad-fragment中的片段都会执行同样的branch，所以结果也是undefine的<br>ddx/ddy分为coarse版本和fine版本。如果直接使用ddx，等价于ddx_coarse（可以看做alias).<br><a href="https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/ddx-coarse" target="_blank" rel="noopener">ddx_coarse</a>和<a href="https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/ddx-fine" target="_blank" rel="noopener">ddx_fine</a>对于同一组2*2的quad-fragment的四个像素，他们的偏导数都将会是一样。这两个函数需要Shader Model 5的支持<a href="#ref">[4]</a></p>
-<p>其他相关函数：<code><a href="https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-fwidth" target="_blank" rel="noopener">fwidth(p)</a> = abs(ddx(p)) + abs(ddy(p))</code></p>
-<p><span id="ref"></span></p>
-<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="https://gamedev.stackexchange.com/a/130933" target="_blank" rel="noopener">[1] What are screen space derivatives and when would I use them?</a><br><a href="http://www.aclockworkberry.com/shader-derivative-functions" target="_blank" rel="noopener">[2] An introduction to shader derivative functions | A Clockwork Berry</a><br><a href="https://gamedev.stackexchange.com/a/62650" target="_blank" rel="noopener">[3] What does ddx (hlsl) actually do?</a><br><a href="https://fgiesen.wordpress.com/2011/07/10/a-trip-through-the-graphics-pipeline-2011-part-8/#comment-1990" target="_blank" rel="noopener">[4] A trip through the Graphics Pipeline 2011, part 8</a><br><a href="http://15462.courses.cs.cmu.edu/spring2018/lecture/persp/slide_055" target="_blank" rel="noopener">[5] [CMU 15462] Lecture 7: PerspectiveTexture</a><br><a href="https://catlikecoding.com/unity/tutorials/advanced-rendering/flat-and-wireframe-shading/" target="_blank" rel="noopener">[6] Flat and Wireframe Shading Derivatives and Geometry</a><br><a href="https://anteru.net/blog/2018/more-compute-shaders/" target="_blank" rel="noopener">[7] More compute shaders</a><br><a href="https://developer.nvidia.com/gpugems/GPUGems2/gpugems2_chapter35.html" target="_blank" rel="noopener">[8] [GPU Gems 2] 35.2.4 The Swizzle Operator</a><br><a href="https://developer.nvidia.com/reading-between-threads-shader-intrinsics" target="_blank" rel="noopener">[9] [Reading Between The Threads: Shader Intrinsics] Fragment Quad Swizzle - Data Exchange and Arithmetic</a><br><a href="https://gpuopen.com/amd-gcn-assembly-cross-lane-operations/" target="_blank" rel="noopener">[10] [AMD GCN Assembly: Cross-Lane Operations] The Swizzle Instruction</a></p>
+        <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>有时候我们在绘制透明的人物角色时，既想要其透明，又想要有一个基于fresnel的边缘光。直接写出来的材质会遇到透明面的穿插交叠的问题。如<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/0_wrong_translucent_object.png" alt title><br>本文会在解决这个问题的同时，对UE4中的scene depth, pixel depth和custom depth这三个容易混淆的概念做个解释和备注。<br><a id="more"></a></p>
+<h1 id="三种depth比较"><a href="#三种depth比较" class="headerlink" title="三种depth比较"></a>三种depth比较</h1><h2 id="Custom-Depth"><a href="#Custom-Depth" class="headerlink" title="Custom Depth"></a>Custom Depth</h2><p>默认情况下不会启用，但是用户有选择性的向其写入深度，从而实现一些复杂的效果。<br>首先在对象面板上勾选Render Custom Depth Pass，这样就能将该物体的深度信息写入custom depth buffer了。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/2.1_render_customdepth_checkbox.png" alt title><br>这里需要注意，对于透明物体，如果直接开启Render CustomDepth Pass是没有作用的，还需要在对应的材质编辑器的属性面板上勾选<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/2.2_allow_customdepth_checkbox.png" alt title></p>
+<p>查看custom buffer如下图<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/2.3_customdepth_first_view.png" alt title></p>
+<p>它的工作原理我们可以做个试验，在透明的人物前面放一个不透明的cube，用的是默认opaque的材质，但同样写入custom depth。<br>然后设置透明的人物材质，设定一个CloseDepthThreshold，当深度小于这个值的时候，显示白色，大于这个值的时候显示黑色。将其连接到Emissive color，并将Opacity设为1这样比较方便观察。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/2.4_customdepth_nodes.png" alt title><br>另外记得要禁用透明材质的深度测试，这样我们可以强制透明材质最后绘制的时候覆盖已有的custom depth buffer.否则因为遮挡关系，我们没法看到cube背后的部分。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/2.5_disable_depth_test.png" alt title><br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/2.6_customdepth_result.png" alt title><br>因为关闭了translucent材质的深度测试，所以透明人物绘制在最顶层。可以看到，头部和手部因为比较靠近相机，所以绘制了出来。但本来较远的腹部也显示了出来，这是因为透明材质shader中使用的是cube的custom depth信息，所以深度小于显示的阈值。<br>也即说明，custom depth是一个buffer，较小的值会覆盖较大的值。</p>
+<h2 id="Pixel-Depth"><a href="#Pixel-Depth" class="headerlink" title="Pixel Depth"></a>Pixel Depth</h2><p>作为对比，如果将比较的对象设置为PixelDepth，则会有不一样的结果<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/2.7_pixeldepth_nodes.png" alt title><br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/2.8_pixeldepth_result.png" alt title></p>
+<p>可以看到到，透明人物采用的还是其自己的深度信息，也即是说因为关闭了depth test，所以它覆盖了本来的cube在pixel depth buffer中的信息。如果开启了depth test且将cube关闭render in main pass（防止不透明的物体挡住后面的人物），则会得到相同的结果。</p>
+<h2 id="Scene-Depth"><a href="#Scene-Depth" class="headerlink" title="Scene Depth"></a>Scene Depth</h2> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/2.9_scenedepth_nodes.png" alt title>
+<p>首先cube将自己的深度写入了scene dpeth buffer，而透明人物因为是translucent的缘故，zwrite关闭，所以depth buffer中完全没有人物的深度信息。因此只能绘制出被cube遮挡处的部分。<br>Tip:对于opaque的物体，它无法读取scene depth，所以只能直接用pixel depth。<br>对于post-processing，它不能使用pixel depth，使用scene depth和SceneTexture:SceneDepth基本等价，除了后者可能会因为抗锯齿而有抖动<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/2.10_pixeldepth_result.png" alt title></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>首先默认物体都打开了render to custom depth，透明物体也打开了allow custom depth write。<br>如果场景内只有一个物体，且物体本身没有自我交叠，则custom depth == pixel depth。若物体是opaque的，则scene depth未定义；若物体是translucent，则scene depth为原始状态<br>如果场景中只有一个物体，物体本身有交叠。若物体是opaque的，则custom depth == pixel depth；若是translucent的，则custom depth &lt;= pixel depth，其中靠近摄像机的一面custom depth == pixel depth，背面的custom depth &lt; pixel depth。scene depth情况同上。<br>如果场景中有两个物体，不透明的物体挡在另一个不透明物体前面。如果不透明物体没有写入custom depth，则custom depth &lt;= pixel depth。<br>如果是不透明的物体挡在透明物体前面，因为后期特效中无法使用pixel depth，scene depth因为是透明物体，也没有写入，所以能比较的只有不透明物体，也就没有意义了。<br>还有其他很多中情况这里就不一一列举了。需要仔细思考情况再加以判断。</p>
+<p>测试中，我们将整体透明度改为0.5，这样可以看到背面的部分<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/2.11_backface_fade.png" alt title></p>
+<p>可以看到后侧的mesh因为pixel depth超过阈值，所以显示黑色，最终显示出来的是前半部分，深度较小的部分。这也可以说明，pixel depth可以采样到被遮挡的部分，并不是使用一个类似buffer的机制来存储的（可能是利用顶点插值的深度？）</p>
+<h1 id="避免重复绘制半透部分"><a href="#避免重复绘制半透部分" class="headerlink" title="避免重复绘制半透部分"></a>避免重复绘制半透部分</h1><p>有了前面的结论，我们首先对custom depth 和pixel depth进行比较。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/3.1_pixel_custom_depth_compare_nodes.png" alt title><br>如果这里depth bias为0，根据我们上面的结论，custom depth &lt;= pixel depth，所以应该不透明度始终为0。结果也的确如此<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/3.2_no_bias_compare_result.png" alt title></p>
+<p>因此，我们需要将pixel增加一个小的负的偏移值，即相当于将pixel depth朝相机方向移动一点。对于正面的部分来说，就是可以将其显示出来。而对于背面来说，因为移动了之后还是没法比正面更靠近相机（背面部分pixel depth &gt; custom depth），所以不透明度依然为0。从而我们就达到了去掉重叠部分的目的。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/3.3_bias_compare_result.png" alt title></p>
+<p>可以看到有些分割处还是会有重叠的显现。这是因为他们的前后面的深度差太小，depth bias已经大于他们的深度差了，所以背面也显示出来了，即更亮了。<br>当这个bias大到一定程度之后，就是完全的重叠显现了<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/3.4_over_bias_compare_result.png" alt title></p>
+<h1 id="绘制半透勾边人物"><a href="#绘制半透勾边人物" class="headerlink" title="绘制半透勾边人物"></a>绘制半透勾边人物</h1><p>上面一步操作可以让我们避免重复绘制mesh，我们回到一开始的地方，再次尝试绘制透明角色。<br>我们这里的描边是通过修改不透明度opacity来实现的（越边缘处，不透明度越高）<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/4.1_translucent_nodes.png" alt title></p>
+<p>这时只想显示透明物体的轮廓时也不奏效了。因为我们用到了fresnel，虽然它只画了一次，但是因为背面没有被剔除，所以背面的转折处依旧被赋予了一个高opacity，从而显示了出来。（我们第一步做的操作只是让前后的mesh“不会”绘制两次，但是计算fresnel的时候，我们并没有办法剔除它们）因此，我们还要想办法把背面剔除<br>解决方法是我们需要用另一个不透明物体放置在同一个位置上，render custom depth且关闭render in main pass。这样不透明的物体就能即写入深度，从而让透明物体背面的部分被剔除。<br>最终的效果图如下<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/4.2_result_1.png" alt title><br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/explanation_on_depth_in_unreal/4.3_result_2.png" alt title></p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="https://www.tomlooman.com/the-many-uses-of-custom-depth-in-unreal-4/" target="_blank" rel="noopener">[1]Custom Depth in Unreal Engine 4</a><br><a href="https://www.cnblogs.com/litmin/p/6802204.html" target="_blank" rel="noopener">[2]UE4 custom depth 自定义深度</a><br><a href="https://www.wxwenku.com/d/100311983" target="_blank" rel="noopener">[3]开发者遇到的典型美术相关问题回顾</a><br><a href="https://blog.csdn.net/qq_16756235/article/details/78303695" target="_blank" rel="noopener">[4]虚幻4中SceneDepth , PixelDepth ,Customdepth,CustomDepth StencilValue的区别</a><br><a href="https://blog.csdn.net/qq_16756235/article/details/76616408" target="_blank" rel="noopener">[5]两个重叠模型模拟双pass,顺便解决透明乱序问题</a><br><a href="https://superyateam.com/2019/06/17/custom-depth-and-custom-depth-stencil-in-ue4/" target="_blank" rel="noopener">[6]Custom Depth and Custom Depth Stencil in UE4</a><br><a href="https://www.hanzhe.com/article/17" target="_blank" rel="noopener">[7]UE4材质中的PixelDepth和SceneDepth</a></p>
 
       
     </div>
@@ -540,9 +550,13 @@
       
         <div class="post-tags">
           
-            <a href="/tags/graphics/" rel="tag"># graphics</a>
-          
             <a href="/tags/shader/" rel="tag"># shader</a>
+          
+            <a href="/tags/game/" rel="tag"># game</a>
+          
+            <a href="/tags/vfx/" rel="tag"># vfx</a>
+          
+            <a href="/tags/unreal/" rel="tag"># unreal</a>
           
         </div>
       
@@ -555,8 +569,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/07/31/raindrop-effect/" rel="next" title="制作不使用贴图的水滴特效">
-                <i class="fa fa-chevron-left"></i> 制作不使用贴图的水滴特效
+              <a href="/2020/04/12/page-curl/" rel="next" title="Pixel shader中的翻页动画">
+                <i class="fa fa-chevron-left"></i> Pixel shader中的翻页动画
               </a>
             
           </div>
@@ -564,10 +578,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2019/09/07/weekly-animation-share-vol-1/" rel="prev" title="Weekly Animation Share Vol.1">
-                Weekly Animation Share Vol.1 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -700,7 +710,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#定义"><span class="nav-number">1.</span> <span class="nav-text">定义</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#实现原理"><span class="nav-number">2.</span> <span class="nav-text">实现原理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#应用"><span class="nav-number">3.</span> <span class="nav-text">应用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-计算Lod或各向异性-Anisotropy"><span class="nav-number">3.1.</span> <span class="nav-text">1.计算Lod或各向异性(Anisotropy)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-计算面法线"><span class="nav-number">3.2.</span> <span class="nav-text">2.计算面法线</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#注意事项"><span class="nav-number">4.</span> <span class="nav-text">注意事项</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#背景"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#三种depth比较"><span class="nav-number">2.</span> <span class="nav-text">三种depth比较</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Custom-Depth"><span class="nav-number">2.1.</span> <span class="nav-text">Custom Depth</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Pixel-Depth"><span class="nav-number">2.2.</span> <span class="nav-text">Pixel Depth</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Scene-Depth"><span class="nav-number">2.3.</span> <span class="nav-text">Scene Depth</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">2.4.</span> <span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#避免重复绘制半透部分"><span class="nav-number">3.</span> <span class="nav-text">避免重复绘制半透部分</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#绘制半透勾边人物"><span class="nav-number">4.</span> <span class="nav-text">绘制半透勾边人物</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
             
 
           </div>
