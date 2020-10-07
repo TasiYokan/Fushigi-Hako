@@ -1,0 +1,1279 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="graphics,shader,game,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="背景有时候出于一些特殊需求，我们需要在平面的UI中制造出伪的3d感UI，让玩家或用户感受到UI的深度，也可以加深UI的交互性。本篇中，会主要利用插值和视差的方法来制作伪3d效果的UI。接下来的内容将会涵盖1.通过插值使得选择平面图像并重采样成为可能2.通过视差让UI能看出深度">
+<meta name="keywords" content="graphics,shader,game">
+<meta property="og:type" content="article">
+<meta property="og:title" content="在屏幕空间下制作3D UI">
+<meta property="og:url" content="http://yoursite.com/2020/10/07/fake-3d-ui/index.html">
+<meta property="og:site_name" content="不思議な箱">
+<meta property="og:description" content="背景有时候出于一些特殊需求，我们需要在平面的UI中制造出伪的3d感UI，让玩家或用户感受到UI的深度，也可以加深UI的交互性。本篇中，会主要利用插值和视差的方法来制作伪3d效果的UI。接下来的内容将会涵盖1.通过插值使得选择平面图像并重采样成为可能2.通过视差让UI能看出深度">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/final.gif">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/uv_remapping.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/coordinates.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/intersect_v.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/intersect_v.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/parallel_v.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/free_transform.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/wrong_no_persp_bw.gif">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/wrong_no_persp.gif">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/z_interplation.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/correct_persp.gif">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/low_height.gif">
+<meta property="og:updated_time" content="2020-10-07T04:23:00.848Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="在屏幕空间下制作3D UI">
+<meta name="twitter:description" content="背景有时候出于一些特殊需求，我们需要在平面的UI中制造出伪的3d感UI，让玩家或用户感受到UI的深度，也可以加深UI的交互性。本篇中，会主要利用插值和视差的方法来制作伪3d效果的UI。接下来的内容将会涵盖1.通过插值使得选择平面图像并重采样成为可能2.通过视差让UI能看出深度">
+<meta name="twitter:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/final.gif">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"right","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false,"onmobile":true},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2020/10/07/fake-3d-ui/">
+
+
+
+
+
+  <title>在屏幕空间下制作3D UI | 不思議な箱</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">不思議な箱</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        <li class="menu-item menu-item-lang">
+          <a href="/en/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-language"></i> <br>
+            
+            中文 -> EN
+          </a>
+        </li>
+        
+      
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+        
+      
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+        
+      
+        
+        
+      
+      <!-- 
+      <li class="menu-item menu-item-home">
+        <a href="/" rel="section">
+          
+            <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+          
+          首页
+        </a>
+      </li> -->
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+
+  
+
+  <div class="site-author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" src="/images/avatar.png" alt="tasiYokan">
+    <p class="site-author-name" itemprop="name">tasiYokan</p>
+      
+        <p class="site-description motion-element" itemprop="description"></p>
+    
+  </div>
+
+  <nav class="site-state">
+    
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">13</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        <a href="/categories/index.html">
+          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        <a href="/tags/index.html">
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <p></p>
+
+  
+
+  
+
+
+</nav>
+
+
+<script type="text/javascript">
+    // Wait for the page to load first
+    var _prevOnload = window.onload;
+    var swithlang = function ()  {
+        // var switchLang = document.getElementById("menu").getElementsByClassName("menu-item-switch_lang")[0].childNodes[0];
+        var href = window.location.href;
+        var menu = document.getElementById("menu");
+        var switchLang = menu.getElementsByClassName("menu-item-lang")[0].getElementsByTagName("a")[0];
+
+        var indexOfEn = href.toLowerCase().indexOf('/en/');
+        if (indexOfEn !== -1) {
+            // console.log("switch to cn from "+ switchLang.href );
+            switchLang.href = href.replace('/en/', '/');
+        }
+        else {
+            // console.log("switch to en from " + switchLang.href );
+            switchLang.href = href.replace(/(^http[s]?:\/\/[a-z0-9.]*[:?0-9-]*[a-z0-9.]*\/)(.*)/i, '$1en/$2');
+        }
+        // console.log("href now is " + switchLang.href);
+    }
+
+    // Switch directly as the load may take a while
+    // swithlang();
+
+    window.onmousedown = function() {
+        swithlang();
+    }
+</script>
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <div class="post-inner">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/10/07/fake-3d-ui/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="tasiYokan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="不思議な箱">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">在屏幕空间下制作3D UI</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-10-07T09:07:53+08:00">
+                2020-10-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Dev/" itemprop="url" rel="index">
+                    <span itemprop="name">Dev</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon">
+              <i class="fa fa-eye"></i>
+            </span>
+            
+              <span class="post-meta-item-text">浏览量</span>
+            
+            <span class="page-pv">
+              <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+         <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/final.gif" alt title>
+<h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>有时候出于一些特殊需求，我们需要在平面的UI中制造出伪的3d感UI，让玩家或用户感受到UI的深度，也可以加深UI的交互性。本篇中，会主要利用插值和视差的方法来制作伪3d效果的UI。<br>接下来的内容将会涵盖<br>1.通过插值使得选择平面图像并重采样成为可能<br>2.通过视差让UI能看出深度</p>
+<a id="more"></a>
+<h1 id="通过四边形对uv进行插值"><a href="#通过四边形对uv进行插值" class="headerlink" title="通过四边形对uv进行插值"></a>通过四边形对uv进行插值</h1><p>在默认情况下，一个方形的面片，uv的分布如下图左侧所示（在UE中，v轴向下）。要想对图片进行像PS里面的自由变换那样的操作，即相当于将uv分布变成右侧的样子<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/uv_remapping.png" alt title><br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/coordinates.png" alt title="这里标出了uv第一象限的四个顶点，其中A为原点"></p>
+<h2 id="寻找灭点"><a href="#寻找灭点" class="headerlink" title="寻找灭点"></a>寻找灭点</h2><p>若想将平面内任意一点用向量AB, AC（x轴和y轴）表示出来，由于可能是非正交的坐标系，所以我们需要找寻一个“灭点”（严格来说，灭点不是2d平面里的概念，但是为了方便描述，在这里引入了这个术语）<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/intersect_v.png" alt title="灭点V为AB和CD所在直线相交点，S为当前屏幕的采样点，P为VS和AC的交点"></p>
+<h2 id="直线的表达式"><a href="#直线的表达式" class="headerlink" title="直线的表达式"></a>直线的表达式</h2><p>我们的第一个任务是寻找交点V，<br>对于直线表达式</p>
+<script type="math/tex; mode=display">F(x) = ax + by + c = 0</script><p>假设直线上两点为p0(x0,y0), p1(x1, y1)，那么可以得到 </p>
+<script type="math/tex; mode=display">
+\begin{cases}
+a = y_0 – y_1\\\
+b = x_1 – x_0\\\
+c = x_0.y_1 – x_1.y_0
+\end{cases}</script><p>更详细的解释可参考<a href="#ref">[1]</a><br>由于直线AB和CD的两个端点都已知，我们可以很方便的表示出AB和CD各自的a,b,c，这里我们可以将a,b,c压缩到一个vector3方便在不同函数中传递<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">float3 <span class="title">GetPointsLineParams</span><span class="params">(float2 A, flaot2 B)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">float</span> a = A.y - B.y;</span><br><span class="line">    <span class="keyword">float</span> b = B.x - A.x;</span><br><span class="line">    <span class="keyword">float</span> c = A.x*B.y - B.x*A.y;</span><br><span class="line">    <span class="keyword">return</span> float3(a,b,c);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="两直线的交点"><a href="#两直线的交点" class="headerlink" title="两直线的交点"></a>两直线的交点</h2><p>对于直线$p_0p_1$和$p_2p_3$的交点应该满足</p>
+<script type="math/tex; mode=display">a_0x + b_0y +c_0 = a_1x + b_1y + c_1 = 0</script><p>其中$a_0,b_0,c_0$为直线$p_0p_1$的参数，$a_1,b_1,c_1$为直线$p_2p_3$的参数<br>由此可推出</p>
+<script type="math/tex; mode=display">
+\begin{cases}
+D = a_0.b_1 – a_1.b_0 \qquad (D为0时，表示两直线平行)\\\
+x = (b_0.c_1 – b_1.c_0)/D\\\
+y = (a_1.c_0 – a_0.c_1)/D
+\end{cases}</script><p>有意思的是<br>这可以看做两个vector2的齐次坐标(a0, b0, c0)和(a1, b1, c1)的叉乘</p>
+<script type="math/tex; mode=display">
+\begin{bmatrix}
+i & j & k\\\
+a_{0} & b_{0} & c_{0}\\\
+a_{1} & b_{1} & c_{1}
+\end{bmatrix}</script><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">float3 <span class="title">GetLinesIntersectPoint</span><span class="params">(float2 A, float2 B, float2 C, float2 D)</span> </span>&#123;</span><br><span class="line">    float3 a = GetPointsLineParams(A, B);</span><br><span class="line">    float3 b = GetPointsLineParams(C, D);</span><br><span class="line">    <span class="keyword">float</span> x = (b.x*c.y – b.y*c.x)/D;</span><br><span class="line">    <span class="keyword">float</span> y = (a.y*c.x – a.x*c.y)/D;</span><br><span class="line">    <span class="keyword">float</span> D = a.x*b.y – a.y*b.x;</span><br><span class="line">    <span class="keyword">return</span> float3(x,y, D);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="坐标系映射"><a href="#坐标系映射" class="headerlink" title="坐标系映射"></a>坐标系映射</h2><p>有了前面的准备工作，我们可以求出灭点V，接下来我们就是要算出任意一个采样点S对应的x,y轴上的分量<br>先以求y轴分量为例子，分为两种情况<br>1.AB和CD所在的直线相交，即存在一个灭点<br>2.AB和CD所在的直线平行，没有交点或者重合<br>这两者可以通过前面式子中的D判断出来</p>
+<p>对于情况1，先利用两直线的交点求出灭点V的位置，对于平面上任意一个采样点s，求向量$\vec{VS}$和直线AC的交点，这样就知道了采样点在ABC坐标系下的y的值（AC假设为单位长度，则AP就是y的大小）<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/intersect_v.png" alt title="AP实际上就是向量AS在AC轴上的投影，也就可以用它来算出y轴上的分量"><br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">float3 P = GetLinesIntersectPoint(V, S, A, C);</span><br><span class="line">flaot D = P.z;</span><br><span class="line">float2 AP = P.xy - A;</span><br><span class="line"><span class="keyword">float</span> y_percent_1 = AP*AC.normalize()/AC.length();</span><br></pre></td></tr></table></figure></p>
+<p>对于情况2，直接将s沿着AB方向做延长的到向量和AC求交，同样可以求得y的坐标<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/parallel_v.png" alt title="先将S沿向量AB方向偏移，然后再与AC求交点P"><br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">float2 P = S + AB;</span><br><span class="line">float2 AP = P.xy - A;</span><br><span class="line"><span class="keyword">float</span> y_percent_2 = AP*AC.normalize()/AC.length();</span><br><span class="line"><span class="comment">// We check if D is not 0</span></span><br><span class="line"><span class="keyword">if</span>(<span class="built_in">abs</span>(D) &gt; <span class="number">0.0001</span>)</span><br><span class="line">    <span class="comment">// case 1</span></span><br><span class="line">    y_percent = y_percent_1;</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">    <span class="comment">// case 2</span></span><br><span class="line">    y_percent = y_percent_2;</span><br></pre></td></tr></table></figure></p>
+<p>用同样的思路，计算采样点在AB方向上的投影分量，就可以算出x坐标（u分量）<br>至此，我们就能对平面上任意一点计算出它在原uv平面上的坐标了<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/free_transform.png" alt title="这张静态的图似乎还看上去挺正常，但是后面我们可以看到它的一些问题"></p>
+<h1 id="视差深度"><a href="#视差深度" class="headerlink" title="视差深度"></a>视差深度</h1><h2 id="旋转平面"><a href="#旋转平面" class="headerlink" title="旋转平面"></a>旋转平面</h2><p>在做视差之前，我们先解决旋转平面的问题。<br>在制作假的3d效果之前，我们先来回忆一下那些“真”的3d效果是如何做出来的。其实所谓真3d，也只不过是一个现实中3d的模拟。我们先得每个顶点赋予一个3d空间坐标，然后利用一些旋转矩阵来变换他们的位置。最后交给图形API或GPU来进行光栅化。由于光栅化的过程不是可编程管线，所以更多时候，我们只用考虑如何做位置变换即可。<br>我们现在的情况是，我们有一块屏幕，我们知道我们要绘制的每个像素在平面上的坐标，我们想知道它原来的位置，从而找到那个位置上的颜色并绘制出来。<br>可是这个像素对应的3d空间下的一点，先是结果了一个旋转位移变换，接着又做了一次投影变换（甚至还不一定是正交的投影矩阵），麻烦就麻烦在最后一步的投影，因为缺少深度信息，它阻止了我们直接应用一个逆变换矩阵。我们无法直接的从屏幕上的任意一点，追溯回它的原始位置</p>
+<p>所以我们要换个思路。我们虽然不能旋转所有的“点”，但是我们可以旋转平面的四个顶点，得到旋转后的一个四边形。光是通过这四边形，我们只能知道这四个顶点最后落到了屏幕上的什么位置。但是别忘了，我们可以利用前面提到的四边形插值，算出平面上任意一个像素对应的是原来的平面上的的坐标。这个坐标即是由四个顶点的属性加权构成。这样就能把本身难以直接解决的问题换了一个路径给解决了</p>
+<p>计算3d空间中的点的旋转很简单，我这里就不赘述了，使用<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">float3 <span class="title">RotateVectorPivot</span><span class="params">(pos, pivot, lookAtVec, resetVec)</span></span></span><br></pre></td></tr></table></figure></p>
+<p>函数来表示。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// this is the relative pos to the pivot point(0,0)</span></span><br><span class="line">float3 A = float3(<span class="number">0</span>,<span class="number">0</span>,layer_depth) - float3(<span class="number">0.5</span>, <span class="number">0.5</span>, <span class="number">0</span>);</span><br><span class="line"><span class="comment">// float2(0,0) is the pivot point float3(0,0,1) means z up (which points to camera, or out of screen)</span></span><br><span class="line"><span class="comment">// camera is out of screen and look into the screen, we will manipulate camera pos to rotate plane</span></span><br><span class="line">float3 A_rotated = RotateVectorPivot(A,float2(<span class="number">0</span>,<span class="number">0</span>), float3(<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>), camera_pos);</span><br><span class="line"><span class="keyword">float</span> A_dpeth = camera_height - A_rotated.z;</span><br><span class="line">float2 A_scaled_xy = A_rotated.xy * camera_height / A_dpeth;</span><br><span class="line">float3 A_persp = float3(A_scaled_xy.x, A_scaled_xy.y, A_dpeth);</span><br></pre></td></tr></table></figure></p>
+<p>先算出旋转4个点后的轮廓，白色区域即是原来(0,1)的uv象限。我们可以想象出来旋转的平面。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/wrong_no_persp_bw.gif" alt title><br>接下来我们就拿前面的uv映射去计算原本的uv位置<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/wrong_no_persp.gif" alt title><br>但是，好像不太对劲。感觉虽然有灭点的趋势，但是感觉形状扭曲了。<br>有趣的是，这里的直线并没有扭曲，但是因为它不符合我们真实世界中的透视，我们的眼睛和大脑会感到困惑。也就产生了扭曲感。我们之前做的插值，都做了一个假设，所有的顶点仍固定在原始的xy平面上，所以直接进行了均匀的插值。实际上，因为近大远小的原则，远处的点会聚在一起，而近处的点则会分散一些，所以我们接下来要将这个过程也修正了</p>
+<h2 id="进行perspective模拟"><a href="#进行perspective模拟" class="headerlink" title="进行perspective模拟"></a>进行perspective模拟</h2><p>其实这一步就是模拟了GPU中的光栅化过程，我们先要在旋转顶点的时候，保存下来它的深度。接着用这个深度对顶点的属性插值（这里是它的x,y投影坐标）<br>我们可以知道顶点属性和顶点的深度会成一个正比的关系，一个通俗的理解就是：三角形上任意一条线段中上的一点P，对于其深度值z和色彩值c，有如下图所示的关系<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/z_interplation.png" alt title><br>这里的C可以是我们以前经常见到的颜色值，也同样可以是屏幕坐标(x,y)<br>这条插值连线上的一点Z的计算公式为</p>
+<script type="math/tex; mode=display">
+\begin{array}{l}
+Z &= Z_0 + t * (Z_1 - Z_0) = Z_0 + \dfrac{qZ_0(Z_1 - Z_0)}{qZ_0 +(1-q)Z_1},\\\
+&= \dfrac{qZ_0^2 + (1-q)Z_0Z_1 + qZ_0Z_1 - qZ_0^2}{qZ_0 +(1-q)Z_1},\\\
+&= \dfrac{Z_0Z_1}{qZ_0 +(1-q)Z_1},\\\
+&= \dfrac{1}{\dfrac{q}{Z_1} + \dfrac{(1-q)}{Z_0}},\\\
+&= \dfrac{1}{\dfrac{1}{Z_0} +q (\dfrac{1}{Z1} - \dfrac{1}{Z_0})}.\\\
+\end{array}</script><p>结合图里的公式，可以得到任意属性的插值公式</p>
+<script type="math/tex; mode=display">
+C= Z [\frac{C_{0}}{Z_{0}}(1-q) + \frac{C_{1}}{Z_{1}}q]</script><p>所以，对于前面的<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">float2 <span class="title">UV_interplation</span><span class="params">(float3 A, float3 B, float3 C, float3 D, float2 uv)</span></span></span><br></pre></td></tr></table></figure></p>
+<p>在根据AC算y_percent的时候，还要再乘上深度的比例。因为这里的C0是0（C1是1），所以我们可以简化计算</p>
+<script type="math/tex; mode=display">
+C= \frac{Z}{Z_{1}}q</script><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sample_depth = lerp(A_dpeth, C_depth, y_percent);</span><br><span class="line">y_percent = y_percent * sample_depth / C_depth;</span><br></pre></td></tr></table></figure>
+<p>同理可以求出x_percent，这样，我们才算是得到了真正的uv坐标</p>
+<h1 id="加入深度"><a href="#加入深度" class="headerlink" title="加入深度"></a>加入深度</h1><p>我们还想给不通过的UI面片放到不同的层中，实现不同的深度感。幸运的是，有了前面的框架之后，让面片有深度也很简单，只要设置旋转的四个顶点的初始深度即可<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">float3 A = float3(<span class="number">0</span>,<span class="number">0</span>,layer_depth) - float3(<span class="number">0.5</span>, <span class="number">0.5</span>, <span class="number">0</span>);</span><br></pre></td></tr></table></figure></p>
+<p>比如这里的layer_depth只要设置成我们想要的深度即可<br>后面的计算都是一样，这样就可以得到标题的最终效果图了<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/correct_persp.gif" alt title="现在看一下效果就对了"><br>如果你想让旋转变得剧烈，还可以降低摄像机的高度，从而让旋转轴的倾斜角加大<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/fake-3d-ui/low_height.gif" alt title="可以对比着标题的动图观察到旋转角变大了"></p>
+<p><span id="ref"></span></p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="https://blog.csdn.net/yangtrees/article/details/7965983" target="_blank" rel="noopener">[1] 算法之美——求两直线交点（三维叉积）——求四边形面积（二维叉积）</a><br><a href="https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/visibility-problem-depth-buffer-depth-interpolation" target="_blank" rel="noopener">[2] Rasterization: a Practical Implementation</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/graphics/" rel="tag"># graphics</a>
+          
+            <a href="/tags/shader/" rel="tag"># shader</a>
+          
+            <a href="/tags/game/" rel="tag"># game</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/04/21/explanation-on-depth-in-unreal/" rel="next" title="UE中的各种depth的解释及应用">
+                <i class="fa fa-chevron-left"></i> UE中的各种depth的解释及应用
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+    </div>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  
+  <aside id="sidebar" class="sidebar sidebar-hide">
+    
+      <div id="sidebar-dimmer"></div>
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <!--<li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>-->
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/avatar.png" alt="tasiYokan">
+          <p class="site-author-name" itemprop="name">tasiYokan</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#背景"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#通过四边形对uv进行插值"><span class="nav-number">2.</span> <span class="nav-text">通过四边形对uv进行插值</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#寻找灭点"><span class="nav-number">2.1.</span> <span class="nav-text">寻找灭点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#直线的表达式"><span class="nav-number">2.2.</span> <span class="nav-text">直线的表达式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#两直线的交点"><span class="nav-number">2.3.</span> <span class="nav-text">两直线的交点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#坐标系映射"><span class="nav-number">2.4.</span> <span class="nav-text">坐标系映射</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#视差深度"><span class="nav-number">3.</span> <span class="nav-text">视差深度</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#旋转平面"><span class="nav-number">3.1.</span> <span class="nav-text">旋转平面</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#进行perspective模拟"><span class="nav-number">3.2.</span> <span class="nav-text">进行perspective模拟</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#加入深度"><span class="nav-number">4.</span> <span class="nav-text">加入深度</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">tasiYokan</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+      
+  <div class="expand-toc">
+    <i class="fa fa-list-ol"></i>
+    
+  </div>
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+</body>
+</html>
