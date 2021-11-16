@@ -1,0 +1,1252 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="graphics,geometry,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="背景在上一篇文章中，我们依据高斯曲率对mesh进行平滑。但是由于平滑过程中经常会出现过多顶点聚集在一起的情况。另外，对很多顶点做平滑本身也是个相当耗时的操作。所以自然而然的，我们希望减少需要处理的顶点。虽然我们已经有了edge collapse（使用案例见使用Quadric Error Metrics进行mesh简化）但是光化简模型并做平滑本事并没有意义，毕竟我们损失了许多顶点信息。我们真正想做">
+<meta name="keywords" content="graphics,geometry">
+<meta property="og:type" content="article">
+<meta property="og:title" content="通过vertex split实现progressive mesh">
+<meta property="og:url" content="http://yoursite.com/2020/03/28/vertex-split-operator/index.html">
+<meta property="og:site_name" content="不思議な箱">
+<meta property="og:description" content="背景在上一篇文章中，我们依据高斯曲率对mesh进行平滑。但是由于平滑过程中经常会出现过多顶点聚集在一起的情况。另外，对很多顶点做平滑本身也是个相当耗时的操作。所以自然而然的，我们希望减少需要处理的顶点。虽然我们已经有了edge collapse（使用案例见使用Quadric Error Metrics进行mesh简化）但是光化简模型并做平滑本事并没有意义，毕竟我们损失了许多顶点信息。我们真正想做">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/0.1_collapse_and_split.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/1.2_collapse_sequence.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/1.3_split_sequence.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/2.1_before_collapse.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/2.2_collapsing.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/2.3_after_collapsing.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/3.1_origin_struct.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/3.2_before_split_struct.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/3.3_after_split_struct.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/3.4_update_struct.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/4.1_vertex_merge.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/4.2_vertex_id_array.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/5.1_bm_valid_check.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/5.2_before_split.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/5.3_valid_pos.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/5.4_invalid_pos.png">
+<meta property="og:updated_time" content="2020-04-01T16:28:36.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="通过vertex split实现progressive mesh">
+<meta name="twitter:description" content="背景在上一篇文章中，我们依据高斯曲率对mesh进行平滑。但是由于平滑过程中经常会出现过多顶点聚集在一起的情况。另外，对很多顶点做平滑本身也是个相当耗时的操作。所以自然而然的，我们希望减少需要处理的顶点。虽然我们已经有了edge collapse（使用案例见使用Quadric Error Metrics进行mesh简化）但是光化简模型并做平滑本事并没有意义，毕竟我们损失了许多顶点信息。我们真正想做">
+<meta name="twitter:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/0.1_collapse_and_split.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"right","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false,"onmobile":true},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2020/03/28/vertex-split-operator/">
+
+
+
+
+
+  <title>通过vertex split实现progressive mesh | 不思議な箱</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">不思議な箱</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        <li class="menu-item menu-item-lang">
+          <a href="/en/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-language"></i> <br>
+            
+            中文 -> EN
+          </a>
+        </li>
+        
+      
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+        
+      
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+        
+      
+        
+        
+      
+      <!-- 
+      <li class="menu-item menu-item-home">
+        <a href="/" rel="section">
+          
+            <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+          
+          首页
+        </a>
+      </li> -->
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+
+  
+
+  <div class="site-author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" src="/images/avatar.png" alt="tasiYokan">
+    <p class="site-author-name" itemprop="name">tasiYokan</p>
+      
+        <p class="site-description motion-element" itemprop="description"></p>
+    
+  </div>
+
+  <nav class="site-state">
+    
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        <a href="/categories/index.html">
+          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        <a href="/tags/index.html">
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <p></p>
+
+  
+
+  
+
+
+</nav>
+
+
+<script type="text/javascript">
+    // Wait for the page to load first
+    var _prevOnload = window.onload;
+    var swithlang = function ()  {
+        // var switchLang = document.getElementById("menu").getElementsByClassName("menu-item-switch_lang")[0].childNodes[0];
+        var href = window.location.href;
+        var menu = document.getElementById("menu");
+        var switchLang = menu.getElementsByClassName("menu-item-lang")[0].getElementsByTagName("a")[0];
+
+        var indexOfEn = href.toLowerCase().indexOf('/en/');
+        if (indexOfEn !== -1) {
+            // console.log("switch to cn from "+ switchLang.href );
+            switchLang.href = href.replace('/en/', '/');
+        }
+        else {
+            // console.log("switch to en from " + switchLang.href );
+            switchLang.href = href.replace(/(^http[s]?:\/\/[a-z0-9.]*[:?0-9-]*[a-z0-9.]*\/)(.*)/i, '$1en/$2');
+        }
+        // console.log("href now is " + switchLang.href);
+    }
+
+    // Switch directly as the load may take a while
+    // swithlang();
+
+    window.onmousedown = function() {
+        swithlang();
+    }
+</script>
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <div class="post-inner">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/03/28/vertex-split-operator/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="tasiYokan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="不思議な箱">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">通过vertex split实现progressive mesh</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-03-28T21:42:55+08:00">
+                2020-03-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Algorithm/" itemprop="url" rel="index">
+                    <span itemprop="name">Algorithm</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon">
+              <i class="fa fa-eye"></i>
+            </span>
+            
+              <span class="post-meta-item-text">浏览量</span>
+            
+            <span class="page-pv">
+              <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+         <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/0.1_collapse_and_split.png" alt title="from Progressive Meshes[1]">
+<h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>在上一篇文章中，我们依据高斯曲率对mesh进行平滑。但是由于平滑过程中经常会出现过多顶点聚集在一起的情况。另外，对很多顶点做平滑本身也是个相当耗时的操作。所以自然而然的，我们希望减少需要处理的顶点。虽然我们已经有了edge collapse（使用案例见<a href="/2020/03/07/mesh_quadric_downsampling">使用Quadric Error Metrics进行mesh简化</a>）但是光化简模型并做平滑本事并没有意义，毕竟我们损失了许多顶点信息。我们真正想做的事情是先减少顶点数-&gt;进行平滑操作-&gt;再还原出原本那些被删去的顶点，从而还原出整个拓扑结构。<br>所以，我们需要找出edge collapse的逆操作：vertex split——从一个顶点裂出一条边的两个顶点，并将原来连接至一个顶点的相邻边和点按照原本的结构连接到新的两个顶点上。</p>
+<p>关于这个操作的概念，最早是伴随着Hugues Hoppe的Progressive Meshes<a href="#ref">[1]</a>一文一起提出的。它提出一个progress mesh序列可以表示为从$M^n$到$M^0$的过程,$M^n$即为原始模型，$M^0$则是经过n次edge collapse后化简的模型。这个序列也是可逆的。可以用下面两个过程来表示<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/1.2_collapse_sequence.png" alt title><br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/1.3_split_sequence.png" alt title></p>
+<a id="more"></a>
+<h1 id="回顾edge-collapse"><a href="#回顾edge-collapse" class="headerlink" title="回顾edge collapse"></a>回顾edge collapse</h1><p>Hoppe使用的是VF的链表结构，即只存取保存顶点id的面序列。不过我们使用的half-edge，所以接下来的叙述，我都会以half-edge为背景叙述。<br>在实现这个operator之前，我们首先要确定它所需要的信息。对于edge collapse操作，它会减去一条边和一个顶点，还会合并中间的边两侧的边（如果我们事先已处理过模型成为triangulated mesh，只包含三角面）（作图！！！）。所以首先我们要记录原始的两个顶点的id和位置，中间的边的id，和两侧的两个面的id，这些都显然可得，所以就不加赘述。</p>
+<p>可是两侧的同一个三角的两条腰只能保留其中一个，我们得决定保留哪一条。<br>我先画出了如下的示意图，所有点线面的id都是依据我实际时候的测试模型的值来，只是为了标记而已。顶点用红色$(vert_ {id})$表示，边用蓝色$[edge_ {id}]$表示，面用绿色$\{face_ {id}\}$表示<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/2.1_before_collapse.png" alt title="原始结构id，有些部分如halfedge，为了避免干扰画面就省去了"><br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/2.2_collapsing.png" alt title="collapse的过程拆解示意图"><br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/2.3_after_collapsing.png" alt title="最终留下的结构"></p>
+<p>之所以设计这样的坍缩方式，是因为我们可以在不影响除坍缩边及其相邻面的情况下完成连接性的重新构建。<br>先规定如下变量<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/3.1_origin_struct.png" alt title="这里图示进行了放大和化简。所标注的是点线面结构，故不再使用括号，颜色也有调整"><br>由于坍缩之后，原始结构中，坍缩边的1-ring 平行的临边集合（图中id为{9,10,11,12,13,14}）都有一条指向坍缩后顶点的halfedge，并且我们保持坍缩过程不改变这个结构。所以我们可以利用这个来判断一条halfedge是否不属于要删除的腰。<br>我们首先遍历坍缩边的两个顶点v0,v1的所有相邻halfedge（放射状，且都是从坍缩边的顶点出发），并找出这条half-edge的next的终点，如果属于v0或v1，我们就知道这属于会被删去的腰中的一个<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Outward radial halfedges</span></span><br><span class="line"><span class="built_in">vector</span>&lt;HalfedgeIter&gt; adjHes = e-&gt;AdjHalfedges();</span><br><span class="line"><span class="comment">// Outward radial edges</span></span><br><span class="line"><span class="built_in">set</span>&lt;EdgeIter&gt; adjEs = e-&gt;AdjEdges();</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">auto</span> adjHe : adjHes) &#123;</span><br><span class="line">    <span class="keyword">if</span> (find(adjEs.begin(), adjEs.end(), adjHe-&gt;next()-&gt;edge()) == adjEs.end())) &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (adjHe-&gt;next()-&gt;twin()-&gt;vertex() == v0) &#123;</span><br><span class="line">            e0_del = adjHe-&gt;next()-&gt;edge()-&gt;id;</span><br><span class="line">            <span class="comment">// The existing one should be the edge of other end point</span></span><br><span class="line">            e1_cur = adjHe-&gt;edge()-&gt;id;</span><br><span class="line">            f0_del_id = adjHe-&gt;face()-&gt;id;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (adjHe-&gt;next()-&gt;twin()-&gt;vertex() == v1) &#123;</span><br><span class="line">            e1_del = adjHe-&gt;next()-&gt;edge()-&gt;id;</span><br><span class="line">            <span class="comment">// The existing one should be the edge of other end point</span></span><br><span class="line">            e0_cur = adjHe-&gt;edge()-&gt;id;</span><br><span class="line">            f1_del_id = adjHe-&gt;face()-&gt;id;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这样一来，所有我们删去的点线面的id信息都记录了下来，这将在后面重建时用到。</p>
+<h1 id="开始split"><a href="#开始split" class="headerlink" title="开始split!"></a>开始split!</h1><p>首先根据之前记录的坍缩腰的id来找到对应的边和halfedge，并根据朝向，定义h0_in，h0_out，h1_in，h1_out.图示如下<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/3.2_before_split_struct.png" alt title><br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">VertexCollapseRecord rec = v0-&gt;collapseRecords[<span class="number">0</span>];</span><br><span class="line">...</span><br><span class="line"><span class="built_in">vector</span>&lt;HalfedgeIter&gt; v0_adjHes = v0-&gt;AdjHalfedges();</span><br><span class="line">HalfedgeIter h0_in = (*(<span class="built_in">std</span>::find_if(v0_adjHes.begin(), v0_adjHes.end(),</span><br><span class="line">    [rec](<span class="keyword">const</span> HalfedgeIter&amp;h) &#123;<span class="keyword">return</span> h-&gt;edge()-&gt;id == rec.e0_cur_id; &#125;)))</span><br><span class="line">    -&gt;twin();</span><br><span class="line">HalfedgeIter h1_in = (*(<span class="built_in">std</span>::find_if(v0_adjHes.begin(), v0_adjHes.end(),</span><br><span class="line">    [rec](<span class="keyword">const</span> HalfedgeIter&amp;h) &#123;<span class="keyword">return</span> h-&gt;edge()-&gt;id == rec.e1_cur_id; &#125;)))</span><br><span class="line">    -&gt;twin();</span><br><span class="line">HalfedgeIter h0_out = h1_in-&gt;twin();</span><br><span class="line">HalfedgeIter h1_out = h0_in-&gt;twin();</span><br></pre></td></tr></table></figure></p>
+<p>分离过程可以想象成，将两对half-edge剥开，然后在中间塞入两个三角形<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/3.3_after_split_struct.png" alt title="淡绿色和虚线都表示新加的结构"><br>拉开halfedge之后，需要重新链接它们和相邻的halfedge，这一步要特别小心<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Setup inner halfedges' connectivity</span></span><br><span class="line">HalfedgeIter h_e0 = newHalfedge(), h_e0_n = newHalfedge(), h_e0_nn = newHalfedge();</span><br><span class="line">HalfedgeIter h_e1 = newHalfedge(), h_e1_n = newHalfedge(), h_e1_nn = newHalfedge();</span><br><span class="line">h_e0-&gt;setNeighbors(     h_e0_n,     h_e1,       v0,             e,              f0_del);</span><br><span class="line">h_e0_n-&gt;setNeighbors(   h_e0_nn,    h1_in,      v1,             h1_in-&gt;edge(),  f0_del);</span><br><span class="line">h_e0_nn-&gt;setNeighbors(  h_e0,       h0_out,     h1_in-&gt;vertex(),e0_del,         f0_del);</span><br><span class="line">h_e1-&gt;setNeighbors(     h_e1_n,     h_e0,       v1,             e,              f1_del);</span><br><span class="line">h_e1_n-&gt;setNeighbors(   h_e1_nn,    h0_in,      v0,             h0_in-&gt;edge(),  f1_del);</span><br><span class="line">h_e1_nn-&gt;setNeighbors(  h_e1,       h1_out,     h0_in-&gt;vertex(),e1_del,         f1_del);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Re-pair existing halfedges with newly created inner ones</span></span><br><span class="line">h0_out-&gt;edge() = e0_del;</span><br><span class="line">h1_out-&gt;edge() = e1_del;</span><br><span class="line">h0_in-&gt;twin() = h_e1_n;</span><br><span class="line">h0_out-&gt;twin() = h_e0_nn;</span><br><span class="line">h1_in-&gt;twin() = h_e0_n;</span><br><span class="line">h1_out-&gt;twin() = h_e1_nn;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Setup mesh elements</span></span><br><span class="line">v0-&gt;halfedge() = h_e0;</span><br><span class="line">v1-&gt;halfedge() = h_e1;</span><br><span class="line">e-&gt;halfedge() = h_e0;</span><br><span class="line">e0_del-&gt;halfedge() = h_e0_nn;</span><br><span class="line">e1_del-&gt;halfedge() = h_e1_nn;</span><br><span class="line">f0_del-&gt;halfedge() = h_e0;</span><br><span class="line">f1_del-&gt;halfedge() = h_e1;</span><br></pre></td></tr></table></figure></p>
+<p>还有几个特别容易忘记更新的地方<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/3.4_update_struct.png" alt title><br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// If h_e0_n-&gt;edge() has h0_out as its halfedge, it has trouble...</span></span><br><span class="line">h_e0_n-&gt;edge()-&gt;halfedge() = h_e0_n;</span><br><span class="line">h_e1_n-&gt;edge()-&gt;halfedge() = h_e1_n;</span><br><span class="line"></span><br><span class="line"><span class="comment">// For h1_in.next() and h1_out, they have v0 as their vertex. </span></span><br><span class="line"><span class="comment">// As we pinch them to the right, they should update their vertex to v1</span></span><br><span class="line"><span class="keyword">auto</span> v1hs = v1-&gt;AdjHalfedges();</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">auto</span> h : v1hs) &#123;</span><br><span class="line">    h-&gt;vertex() = v1;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="collapse序列信息的存储"><a href="#collapse序列信息的存储" class="headerlink" title="collapse序列信息的存储"></a>collapse序列信息的存储</h1><p>对于class VertexCollapseRecord，我们可以定义如下的字段<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> v0_id, v1_id, e_id;</span><br><span class="line"><span class="keyword">int</span> e0_cur_id, e0_del_id, e1_cur_id, e1_del_id;</span><br><span class="line"><span class="keyword">int</span> f0_del_id, f1_del_id;</span><br><span class="line">Vector3D v1_pos; <span class="comment">// position of the other removed vertex</span></span><br><span class="line">Vector3D v0_pos; <span class="comment">// Last position of this vertex</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">bool</span> isValid = <span class="literal">false</span>;</span><br><span class="line"><span class="keyword">int</span> nextRecOffset = <span class="number">1</span>;</span><br></pre></td></tr></table></figure></p>
+<p>其中上半部分比较好理解，即我们上面所说的各种id和坐标，用来还原结构的。而下半部分则是用来帮助我们完成坍缩序列记录的，即我们希望坍缩的还原是能够完全按照之前的顺序进行的。</p>
+<p>假设坍缩记录会记录两个端点各自的坍缩序列，那么我们势必涉及到要将各自的坍缩记录嵌套起来才能存储。没有什么简单的方法能支持这种嵌套的数据类型，所以我干脆用数组的方式进行嵌套的模拟。思路倒是和用数组的跳转表来表示稀疏邻接矩阵有些相似。<br>合并的图示如下<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/4.1_vertex_merge.png" alt title></p>
+<p>id数组的构成如下<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/4.2_vertex_id_array.png" alt title><br>这样我们就可以将“嵌套”的顶点id列表存在一个flat的数组中，也不用管理恼人的指针了。每次在split一个顶点的时候，只用先找到active vert或者merged vert的头，读取到它的长度，就可以知道当前顶点的坍缩历史。在创建新顶点完成之后，将这块坍缩历史再更新到新的顶点就好。数据顺序都不会被破坏。</p>
+<p>坍缩边时构建id array<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Generate collapse info record ////////////////////////</span></span><br><span class="line"><span class="keyword">if</span> (v0_colRecs.size() == <span class="number">0</span>) &#123;</span><br><span class="line">    v0_colRecs.push_back(VertexCollapseRecord());</span><br><span class="line">    v0_colRecs[<span class="number">0</span>].v0_id = v0_id;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> (v1_colRecs.size() == <span class="number">0</span>) &#123;</span><br><span class="line">    v1_colRecs.push_back(VertexCollapseRecord());</span><br><span class="line">    v1_colRecs[<span class="number">0</span>].v0_id = v1_id;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> nextOffset = <span class="number">1</span>; <span class="comment">// First point to the start of v0 collapseRecords</span></span><br><span class="line">nextOffset += v0_colRecs[<span class="number">0</span>].nextRecOffset; <span class="comment">// Next point to the start of v1 collapseRecords</span></span><br><span class="line">nextOffset += v1_colRecs[<span class="number">0</span>].nextRecOffset; <span class="comment">// Finally point to the end/the start of next collapseRecords subtree</span></span><br><span class="line">VertexCollapseRecord rec = VertexCollapseRecord(eid, v0_id, v1_id, v0_pos, v1_pos,</span><br><span class="line">    e0_cur, e0_del, e1_cur, e1_del, f0_del_id, f1_del_id, nextOffset);</span><br><span class="line">newV-&gt;collapseRecords.push_back(rec);</span><br><span class="line">newV-&gt;collapseRecords.insert(newV-&gt;collapseRecords.end(), v0_colRecs.begin(), v0_colRecs.end());</span><br><span class="line">newV-&gt;collapseRecords.insert(newV-&gt;collapseRecords.end(), v1_colRecs.begin(), v1_colRecs.end());</span><br></pre></td></tr></table></figure></p>
+<p>在split的时候，把两个部分再解出来。这里我还用了一个isValid来代表这是否是叶子节点，如果是叶子节点，代表这个顶点从没有被合并过，是原始顶点，所以不能split<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">VertexCollapseRecord rec = v0-&gt;collapseRecords[<span class="number">0</span>];</span><br><span class="line">VertexCollapseRecord v0_prev_rec = v0-&gt;collapseRecords[<span class="number">1</span>];</span><br><span class="line">VertexCollapseRecord v1_prev_rec = v0-&gt;collapseRecords[<span class="number">1</span> + v0_prev_rec.nextRecOffset];</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (rec.isValid == <span class="literal">false</span>) &#123;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="string">"Selected vertex doesn't have any collapse info"</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> edges.end();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line">v0-&gt;collapseRecords.assign(</span><br><span class="line">    v0-&gt;collapseRecords.begin() + <span class="number">1</span>, </span><br><span class="line">    v0-&gt;collapseRecords.begin() + <span class="number">1</span> + v0_prev_rec.nextRecOffset);</span><br><span class="line">v1-&gt;collapseRecords.assign(</span><br><span class="line">    v0-&gt;collapseRecords.begin() + <span class="number">1</span> + v0_prev_rec.nextRecOffset, </span><br><span class="line">    v0-&gt;collapseRecords.end());</span><br></pre></td></tr></table></figure></p>
+<h1 id="找寻合适的插入点"><a href="#找寻合适的插入点" class="headerlink" title="找寻合适的插入点"></a>找寻合适的插入点</h1><p>有些情况下，我们并不一定要准确的还原merge的顶点的原始位置。例如，我们对模型球面参数化之后，我们希望还原的顶点落在球面上，只是保持原来的相对拓扑关系，并不要求位置一致。于是我们就需要根据其周围顶点的位置，判断哪里是合适的插入位置<br>首先，我们把3D问题划归到2D平面上。我们假设球面参数化之后，所有顶点都分布潜在球面上且没有交叠的部分，于是我们就可以近似的将相邻点构成的面看出一个微分平面，而这个法线则是这个多边形中每个小三角形的有向面积<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Get adjective vertices plane's normal</span></span><br><span class="line"><span class="function">Vector3D <span class="title">N</span><span class="params">(<span class="number">0.</span>, <span class="number">0.</span>, <span class="number">0.</span>)</span></span>;</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; v1_ajdVs.size(); ++i) &#123;</span><br><span class="line">    Vector3D vec_pi = v1_ajdVs[i]-&gt;position;</span><br><span class="line">    Vector3D vec_pj = v1_ajdVs[(i + <span class="number">1</span>) % v1_ajdVs.size()]-&gt;position;</span><br><span class="line">    N += cross(vec_pi, vec_pj);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> (N.norm() &gt; <span class="number">1e-5</span>)</span><br><span class="line">    N = N.unit();</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">    N = Vector3D(<span class="number">0</span>, <span class="number">1</span>, <span class="number">0</span>);</span><br></pre></td></tr></table></figure></p>
+<p>通过$point - dot(point, N) * N)$可以将一个点投影到这个微平面上。</p>
+<p>B.Mocanu<a href="#ref">[2]</a>提出的检测合法点需要将平面分割成很多个小点再对所有点进行可见性测试，即如果从新的顶点与之前的顶点相连的边和旧的边有相交即为非法<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/5.1_bm_valid_check.png" alt title><br>下面给出了几个合法和非法的例子<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/5.2_before_split.png" alt title><br>这个例子中，主要的问题在于向内凹角的两侧的顶点不容易被新的顶点“看到”，如果我们用半平面交画出范围，可以看到只有中间的重叠颜色才是合法的区域<br>首先是一个合法的位置<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/5.3_valid_pos.png" alt title><br>接着是一个非法的位置，这里三角形v1-v0-v6已经flip了，所以是个非法的面<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/vertex_split_operator/5.4_invalid_pos.png" alt title></p>
+<p><span id="ref"></span></p>
+<h1 id="引用"><a href="#引用" class="headerlink" title="引用"></a>引用</h1><p><a href="http://hhoppe.com/pm.pdf" target="_blank" rel="noopener">[1] Progressive Meshes [Hugues Hoppe. ACM SIGGRAPH 1996 Proceedings, 99-108]</a><br><a href>[2] Direct spherical parameterization based on surface curvature [B. Mocanu, T. Zaharia]</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/graphics/" rel="tag"># graphics</a>
+          
+            <a href="/tags/geometry/" rel="tag"># geometry</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/03/07/curvature_driven_flattening/" rel="next" title="基于高斯曲率的mesh扁平化">
+                <i class="fa fa-chevron-left"></i> 基于高斯曲率的mesh扁平化
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/04/12/page-curl/" rel="prev" title="Pixel shader中的翻页动画">
+                Pixel shader中的翻页动画 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+    </div>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  
+  <aside id="sidebar" class="sidebar sidebar-hide">
+    
+      <div id="sidebar-dimmer"></div>
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <!--<li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>-->
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/avatar.png" alt="tasiYokan">
+          <p class="site-author-name" itemprop="name">tasiYokan</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">14</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#背景"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#回顾edge-collapse"><span class="nav-number">2.</span> <span class="nav-text">回顾edge collapse</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#开始split"><span class="nav-number">3.</span> <span class="nav-text">开始split!</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#collapse序列信息的存储"><span class="nav-number">4.</span> <span class="nav-text">collapse序列信息的存储</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#找寻合适的插入点"><span class="nav-number">5.</span> <span class="nav-text">找寻合适的插入点</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#引用"><span class="nav-number">6.</span> <span class="nav-text">引用</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">tasiYokan</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+      
+  <div class="expand-toc">
+    <i class="fa fa-list-ol"></i>
+    
+  </div>
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+</body>
+</html>

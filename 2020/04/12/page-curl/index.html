@@ -1,0 +1,1258 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="game,graphics,shader,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="背景有时候，我们在游戏中需要表现一个书本打开或则翻页的效果。如果很生硬的用一个2D形变动画或者一个淡入淡出，那肯定达不到想要的效果。所以有人想到了用3D UI来制作动画。W.Dana Nuon[1]有一篇文章介绍了一种将2D坐标映射到3D空间来完成一个基于圆锥的翻页顶点动画。由于是顶点动画，所以平面需要进行细分，顶点越多，自然效果也越好。可是有时候，这个需求只是做在UI中的，他们可能没有必要的3">
+<meta name="keywords" content="game,graphics,shader">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Pixel shader中的翻页动画">
+<meta property="og:url" content="http://yoursite.com/2020/04/12/page-curl/index.html">
+<meta property="og:site_name" content="不思議な箱">
+<meta property="og:description" content="背景有时候，我们在游戏中需要表现一个书本打开或则翻页的效果。如果很生硬的用一个2D形变动画或者一个淡入淡出，那肯定达不到想要的效果。所以有人想到了用3D UI来制作动画。W.Dana Nuon[1]有一篇文章介绍了一种将2D坐标映射到3D空间来完成一个基于圆锥的翻页顶点动画。由于是顶点动画，所以平面需要进行细分，顶点越多，自然效果也越好。可是有时候，这个需求只是做在UI中的，他们可能没有必要的3">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/0_page_curl.gif">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/2.1_coordinate.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/3.1_plane_normal.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/3.2_flat_perspective.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/3.3_flat_rolling.gif">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.1_ray_cylinder.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.2_ray_cycle.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.3_curvature_change.gif">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.5_cycle_rotation_topdown.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.4_rolling_cylinder.gif">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.6_t1_z.gif">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.7_t2_z.gif">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.8_cycle_rotation_1.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.9_cycle_rotation_2.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.10_front_face_mask.gif">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.11_look_through.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.12_rolling_cylinder_through.gif">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.13_ab_pages.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.14_uv_stages.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.15_1st_stage_valid_uv.gif">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/5.1_auto_curvature_graph.png">
+<meta property="og:updated_time" content="2020-10-06T00:55:12.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Pixel shader中的翻页动画">
+<meta name="twitter:description" content="背景有时候，我们在游戏中需要表现一个书本打开或则翻页的效果。如果很生硬的用一个2D形变动画或者一个淡入淡出，那肯定达不到想要的效果。所以有人想到了用3D UI来制作动画。W.Dana Nuon[1]有一篇文章介绍了一种将2D坐标映射到3D空间来完成一个基于圆锥的翻页顶点动画。由于是顶点动画，所以平面需要进行细分，顶点越多，自然效果也越好。可是有时候，这个需求只是做在UI中的，他们可能没有必要的3">
+<meta name="twitter:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/0_page_curl.gif">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"right","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false,"onmobile":true},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2020/04/12/page-curl/">
+
+
+
+
+
+  <title>Pixel shader中的翻页动画 | 不思議な箱</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">不思議な箱</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        <li class="menu-item menu-item-lang">
+          <a href="/en/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-language"></i> <br>
+            
+            中文 -> EN
+          </a>
+        </li>
+        
+      
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+        
+      
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+        
+      
+        
+        
+      
+      <!-- 
+      <li class="menu-item menu-item-home">
+        <a href="/" rel="section">
+          
+            <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+          
+          首页
+        </a>
+      </li> -->
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+
+  
+
+  <div class="site-author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" src="/images/avatar.png" alt="tasiYokan">
+    <p class="site-author-name" itemprop="name">tasiYokan</p>
+      
+        <p class="site-description motion-element" itemprop="description"></p>
+    
+  </div>
+
+  <nav class="site-state">
+    
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        <a href="/categories/index.html">
+          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        <a href="/tags/index.html">
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <p></p>
+
+  
+
+  
+
+
+</nav>
+
+
+<script type="text/javascript">
+    // Wait for the page to load first
+    var _prevOnload = window.onload;
+    var swithlang = function ()  {
+        // var switchLang = document.getElementById("menu").getElementsByClassName("menu-item-switch_lang")[0].childNodes[0];
+        var href = window.location.href;
+        var menu = document.getElementById("menu");
+        var switchLang = menu.getElementsByClassName("menu-item-lang")[0].getElementsByTagName("a")[0];
+
+        var indexOfEn = href.toLowerCase().indexOf('/en/');
+        if (indexOfEn !== -1) {
+            // console.log("switch to cn from "+ switchLang.href );
+            switchLang.href = href.replace('/en/', '/');
+        }
+        else {
+            // console.log("switch to en from " + switchLang.href );
+            switchLang.href = href.replace(/(^http[s]?:\/\/[a-z0-9.]*[:?0-9-]*[a-z0-9.]*\/)(.*)/i, '$1en/$2');
+        }
+        // console.log("href now is " + switchLang.href);
+    }
+
+    // Switch directly as the load may take a while
+    // swithlang();
+
+    window.onmousedown = function() {
+        swithlang();
+    }
+</script>
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <div class="post-inner">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/04/12/page-curl/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="tasiYokan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="不思議な箱">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Pixel shader中的翻页动画</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-04-12T17:34:59+08:00">
+                2020-04-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Dev/" itemprop="url" rel="index">
+                    <span itemprop="name">Dev</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon">
+              <i class="fa fa-eye"></i>
+            </span>
+            
+              <span class="post-meta-item-text">浏览量</span>
+            
+            <span class="page-pv">
+              <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+         <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/0_page_curl.gif" alt title>
+<h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>有时候，我们在游戏中需要表现一个书本打开或则翻页的效果。如果很生硬的用一个2D形变动画或者一个淡入淡出，那肯定达不到想要的效果。所以有人想到了用3D UI来制作动画。W.Dana Nuon<a href="#ref">[1]</a>有一篇文章介绍了一种将2D坐标映射到3D空间来完成一个基于圆锥的翻页顶点动画。由于是顶点动画，所以平面需要进行细分，顶点越多，自然效果也越好。可是有时候，这个需求只是做在UI中的，他们可能没有必要的3D美术或者制作3D UI的经验。他们只能制作2D的素材。这种时候该怎么办呢？<br>本文中将会提出一种基于片段着色器的方法，在屏幕空间下模拟翻页的动画。本质上其实就是一个ray-tracing的过程，只不过很多地方都进行了化简和hack</p>
+<a id="more"></a>
+<h1 id="利用光线追踪"><a href="#利用光线追踪" class="headerlink" title="利用光线追踪"></a>利用光线追踪</h1><p>普通的渲染过程是光栅化，它将集合体上的每一个顶点对应到屏幕的对应位置，然后对其中的每个像素进行光栅化插值。其中发生的变化过程是将坐标从3D投影到2D上。这是一个简单但也高效的过程。早些时候，基本上所有的渲染都是利用光栅化的手段进行渲染的。<br>但对于我们这里的例子，我们正是因为没有办法求得3D坐标，所以无法展现这个动态过程，所以我们需要找寻另一种渲染的方式。也即ray-tracing的方法。<br>我们定义一个虚拟的摄像机坐标系，其中x正方向指向右侧，y正方向指向下侧（因为UE4中uv的v是自顶向下，所以我们这么定义方向，对于unity，我们也可以反过来），z轴垂直纸面向外。摄像机（或者说观察点）位于屏幕裁面（纸面）外，指向纸面（即z轴负方向）。对于一个quad，因为原始的uv的范围是[0,1]，为了方便起见，我们把它划分为两块，如下图所示，再将虚拟”摄像机”安放在(0,0.5,5)的位置<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/2.1_coordinate.png" alt title><br>我们假设摄像机的投影面即为xy范围[-1, 0]到[1, 1]，z为0的平面。我们若想知道这个quad上某个像素应该着什么颜色，只用从摄像机向近裁面上该点射一道射线，和物体的交点的颜色值即为绘制的颜色。<br>按照上面的定义我们可以知道，初始状态下，每个像素点的xy坐标即为纹理采样中的uv坐标。如果我们将左右两张贴图分别放在了[-1,0]-[0,1]和[0,0]-[1,1]的范围内，则可能还要重新映射一下左侧的贴图。<br>至此，我们就有了基本的框架</p>
+<h1 id="平板翻页"><a href="#平板翻页" class="headerlink" title="平板翻页"></a>平板翻页</h1><p>在进行更复杂的翻页之前，我们先来实现一种最简单的翻页效果。想象我们的纸是一个刚性的片，翻页的过程中只有角度的变化。我们只用进行一个ray-plane intersection测试就知道，观察视线和quad的交点的3D坐标。<br>射线的表达式为：<br>$$E+t\vec{EP} = T \qquad (1)$$<br>平面的表达式：<br>$$dot(\vec{N}, T) = 0$$<br>即$$\vec{N}_x . T_x + \vec{N}_y . T_y + \vec{N}_z . T_z = 0 \qquad (2)$$<br>其中E是摄像机的位置，P是投影面上的采样点坐标，T是纸片上的交点坐标，$\vec{EP}$是观察方向，N是纸片法线方向（假设纸片绕着y轴正方向，按照右手坐标系旋转了$\theta$弧度，则$\vec{N} = (-sin\theta, 0, cos\theta)$）<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/3.1_plane_normal.png" alt title><br>E,D,P,N都已知，两式联立起来，将$E+t\vec{EP}$代入2式的T，就可以解出t，<br>$$-sin(\theta)(E_x + t{EP}_x) + cos(\theta)(E_z + t{EP}_z) = 0$$<br>$$ t = \frac{(E_z - tan(\theta)E_x)}{(tan(\theta){EP}_x - {EP}_z)}$$<br>由 $E+t\vec{EP} = T $ 从而求出T</p>
+<p>T的$T_x$和$T_y$是我们所关注的，但它们是z=0的平面上的投影坐标，而不是采样时用到的uv坐标。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/3.2_flat_perspective.png" alt title><br>对于$T_v$，它等于$T_y$，因为我们并没有在y方向上进行移动。而对于$T_u$，因为已经知道了OT的长度，也知道了$T_y$，所以用勾股定律就可以求得<br>$$T_{u} =\sqrt{OT^{2} -(T_{v} )^{2}}$$</p>
+<p>有了uv坐标，自然就能知道该像素该绘制的颜色。最终效果如下<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/3.3_flat_rolling.gif" alt title="备注：这里x负半轴的u已经翻转过了，如果未处理，则应该绕y轴对称"></p>
+<h1 id="增加一些弧度"><a href="#增加一些弧度" class="headerlink" title="增加一些弧度"></a>增加一些弧度</h1><p>如果用平板翻页，虽然视觉上是真实了，但是物理上还是失真。因为现实中纸张都比较柔软，在翻页的时候会褶皱或者弯曲。所以我们需要用另一种方法去模拟这个弯曲弧度。<br>这里用到的一个思路是，假想纸片包裹在一个过y轴且轴线平行于y轴的圆柱体。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.1_ray_cylinder.png" alt title></p>
+<h2 id="射线与圆柱相交测试"><a href="#射线与圆柱相交测试" class="headerlink" title="射线与圆柱相交测试"></a>射线与圆柱相交测试</h2><p>第一步还是求交点T，这次是ray-cylinder。不过在这里因为y方向不重要，所以我们可以只考虑xz平面，将问题化简成ray-cycle相交的问题<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.2_ray_cycle.png" alt title><br>射线的表达式为：<br>$$E+t\vec{EP} = T$$<br>平面的表达式：<br>$$(T - C)^2 = r^2$$<br>这里所有向量都用2D向量表示。r为我们自定义的圆柱（圆）的半径，为已知量。<br>这里还有个细节，就是C的位置。C是圆心的坐标。在初始状态下，它的xz平面横坐标应该为$(0.5, -\sqrt{r^{2} -(0.5)^{2}})$<br>随着圆柱旋转起来，它的坐标还要再用一个2D的旋转矩阵来更新<br>求得C之后，将两式联立起来就是<br>$$(E+t\vec{EP} - C)^2 = r^2$$<br>$$\Longrightarrow (\vec{CE}+t\vec{EP})^2 = r^2$$<br>$$( CE_{x} +tEP_{x})^{2} +( CE_{z} +EP_{z})^{2} =r^{2}$$<br>$$t^{2}(EP_{x}^2 + EP_{z}^2) + 2t(CE_{x}.EP_{x} +CE_{z}.EP_{z}) +(CE_{x}^2 + CE_{z}^2) - r^2=0$$<br>于是利用一元二次方程$ax^2+bx+c=0$的求根公式求解t<br>$$<br>\begin{cases}<br>a = (EP_{x}^2 + EP_{z}^2)\\<br>b = 2( CE_{x} .EP_{x} +CE_{z} .EP_{z})\\<br>c = (CE_{x}^2 + CE_{z}^2) - r^2<br>\end{cases}<br>$$<br>t可能有1解，2解或者无解，分别对应相切，相交，相离三种情况<br>对于有2解的情况（即$\Delta = b^2 - 4ac &gt; 0$），我们令<br>$$<br>\begin{cases}<br>t1 = \frac{-b-\sqrt{b^{2} -4ac}}{2a}\<br>t2 = \frac{-b+\sqrt{b^{2} -4ac}}{2a}<br>\end{cases}<br>$$<br>t1,t2分别对应近交点T1和远交点T2。当我们要决定如何绘制像素的颜色时，也是从这两个值中选择一个作为uv的依据</p>
+<p>先考虑T为T1的情况，假设射线先交在T1处，于是我们想知道它对应的uv坐标。这次的v还是和前面flat时候的例子一样$T_v = T_y$<br>但对于$T_u$我们无法直接求得，要首先通过CO和CT的dot（因为$\angle OCT(\alpha)$的范围是[0,π]）求出角$\alpha$，再利用$\angle \alpha$的弧长来得到$T_u$<br>$$dot(CO, CT) = r^2 * cos\alpha$$</p>
+<p>代码如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">float2 uv = ((in_uv.x - <span class="number">0.5</span>)*<span class="number">2</span>, in_uv.y);</span><br><span class="line">float3 P = float3(uv, <span class="number">0</span>);</span><br><span class="line">float3 EP = normalize(P - E);</span><br><span class="line"></span><br><span class="line">float3 chord_normal = float3(-<span class="built_in">sin</span>(theta), <span class="number">0</span>, <span class="built_in">cos</span>(theta));</span><br><span class="line">float3 A = float3(<span class="built_in">cos</span>(theta), <span class="number">0</span>, <span class="built_in">sin</span>(theta))<span class="comment">// The right edge projected point on xz plane</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Get intersection on cylinder</span></span><br><span class="line">float3 E = float3(<span class="number">0</span>, <span class="number">0.5</span>, <span class="number">5</span>); <span class="comment">// eye position</span></span><br><span class="line"><span class="keyword">float</span> r = <span class="number">1</span> / curvature; <span class="comment">// r is AC</span></span><br><span class="line"><span class="keyword">float</span> AM = <span class="number">0.5</span>;</span><br><span class="line"><span class="keyword">float</span> MC = <span class="built_in">sqrt</span>(r*r - AM * AM);</span><br><span class="line">float3 C = (A + <span class="number">0</span>)*<span class="number">0.5</span> <span class="comment">// M is the midpoint of AO</span></span><br><span class="line">float3 CE = E - C;</span><br><span class="line"></span><br><span class="line"><span class="keyword">float</span> a = EP.x*EP.x + EP.z*EP.z;</span><br><span class="line"><span class="keyword">float</span> b = <span class="number">2</span>(CE.x*EP.x + EP.z*CE.z);</span><br><span class="line"><span class="keyword">float</span> c = CE.x*CE.x + CE.z*CE.z - r*r;</span><br><span class="line"><span class="keyword">float</span> delta = b*b - <span class="number">4</span>*a*c;</span><br><span class="line"></span><br><span class="line"><span class="keyword">float</span> t1 = (-b - delta) / (<span class="number">2</span>*a);</span><br><span class="line"><span class="keyword">float</span> t2 = (-b + dleta) / (<span class="number">2</span>*a);</span><br><span class="line"></span><br><span class="line">float3 T1 = E + t1*EP;</span><br><span class="line">float3 T2 = E + t2*EP;</span><br></pre></td></tr></table></figure></p>
+<p>这样我们就能正确的采样纹理了。这一步完成之后，我们可以测试不同曲率半径下的表现<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.3_curvature_change.gif" alt title="这个时候应该已经可以感受到圆柱的体积了"></p>
+<h2 id="旋转圆柱体"><a href="#旋转圆柱体" class="headerlink" title="旋转圆柱体"></a>旋转圆柱体</h2><p>接下来，我们将圆柱体绕着y轴旋转$\theta$角度<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.5_cycle_rotation_topdown.png" alt title><br>效果如下<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.4_rolling_cylinder.gif" alt title><br>我们还可以debug交点T1,T2的深度变化情况<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.6_t1_z.gif" alt title><br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.7_t2_z.gif" alt title><br>但这个真实的卷纸还有些差别，卷纸虽然依附于圆柱体上，但是只有部分是显示的，即我们要对圆柱进行裁剪。裁剪的依据是判断uv坐标是否落在了[0,1]的区间内。对u大于1或者小于0的部分，我们则不绘制。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.8_cycle_rotation_1.png" alt title><br>不过有时候虽然u在[0,1]中，但是面却是背面，如下图所示。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.9_cycle_rotation_2.png" alt title><br>所以只有当uv在[0,1]中且视线与圆柱的正面相交，才能说明当前采样点属于正面。<br>我们可以得到正面的部分的mask动画，即上图中斜向的网格线区域<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.10_front_face_mask.gif" alt title><br>接下来，如果剩余的黑色区域中与圆柱体有交点，则应该绘制背面<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.11_look_through.png" alt title="这里u轴负半轴的部分也被剔除了，因为它的u没有在[0,1]的区间里"><br>相关代码如下:<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Sample on texture from 3d position: T</span></span><br><span class="line"><span class="function">float4 <span class="title">GetUv</span><span class="params">(float3 T, float3 C, float3 E, out float2 uv_1st)</span> </span>&#123;</span><br><span class="line">    float2 CT = float2(T.x, T.z) - float2(C.x, C.z);</span><br><span class="line">    float2 TE = float2(E.x, E.z) - float2(T.x, T.z);</span><br><span class="line">    <span class="keyword">float</span> face = sign(dot(CT, TE));</span><br><span class="line"></span><br><span class="line">    float2 CO = - float2(C.x, C.z);</span><br><span class="line">    <span class="keyword">float</span> cos_alpha = dot(CT, CO)/(r*r);</span><br><span class="line">    <span class="keyword">float</span> sample_u = arccos(cos_alpha);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Check if u is on the positive side or not</span></span><br><span class="line">    <span class="keyword">float</span> is_positive = sign(CT.x*CO.y - CT.y*CO.x); <span class="comment">// 2D cross product</span></span><br><span class="line">    sample_u = sample_u * is_positive; <span class="comment">// now u is mapped to [-1,0] and [0,1]</span></span><br><span class="line">    float2 origin_uv = float2(sample_u, T.y);</span><br><span class="line">    float2 stage1_uv = origin_uv * float2(sign(dir), <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">float</span> face_dir = sign(face * dir);</span><br><span class="line">    float2 stage2_uv = face_dir &gt; <span class="number">0</span> ? stage1_uv: float2(<span class="number">1</span> - stage1_uv.x, stage1_uv.y);</span><br><span class="line">    <span class="keyword">float</span> IsUvValid = (stage1_uv.x &gt; <span class="number">0</span> &amp;&amp; stage1_uv.x &lt; u_limit &amp;&amp; stage1_uv.y &gt; <span class="number">0</span> &amp;&amp; stage1_uv.y &lt; <span class="number">1</span>) ? <span class="number">1</span>:<span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> float3(stage2_uv, IsUvValid, face);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">float2 T1_1st_uv, T2_1st_uv;</span><br><span class="line">float4 T1_uv = GetUv(T1, C, E, T1_1st_uv);</span><br><span class="line">float4 T2_uv = GetUv(T2, C, E, T2_1st_uv);</span><br><span class="line">float2 overlap_uv = T1_uv.z &gt; <span class="number">0</span> ? T1_uv.xy : T2_uv.xy;</span><br><span class="line"><span class="comment">// Get stage1 uv that centered at mid so that we can apply x_limit later correctly</span></span><br><span class="line">float2 overlap_1st_uv = T1_uv.z &gt; <span class="number">0</span> ? T1_1st_uv.xy : T2_1st_uv.xy;</span><br><span class="line"><span class="keyword">float</span> overlap_face = T1_uv.z &gt; <span class="number">0</span> ? T1_uv.w : T2_uv.w;</span><br><span class="line"><span class="keyword">float</span> T_z = T1_uv.z &gt; <span class="number">0</span> ? T1.z : T2.z;</span><br></pre></td></tr></table></figure></p>
+<p>完整的动画如下<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.12_rolling_cylinder_through.gif" alt title></p>
+<h2 id="处理AB面"><a href="#处理AB面" class="headerlink" title="处理AB面"></a>处理AB面</h2><p>所谓AB面，即单数页(A)和偶数页(B)，分布在摊开书的左侧和右侧。我们将一页纸从右侧翻到左边的时候，需要用另一个面来绘制。这里有个需要注意的地方，如果右侧的书的边界是贴着左侧的，那翻过来之后就是贴着右侧了，但是u的方向不能简单镜像，因为那样会让字都反过来。<br>因为书页既可能从右翻到左，也可能从左翻到右。由由于翻的方向不同，其实我们需要虚拟出的圆柱体的方向也有所不同，如果是从右向左，圆柱体应该是轴线在初始状态（θ为0）的时候是在z轴负半轴。反之，如果从左向右，则在z轴正半轴。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.13_ab_pages.png" alt title></p>
+<p>所以我们总共需要考虑4种情况。<br>我们校正uv可以分为两步：<br>1.根据指外翻还是内翻（即从右向左还是从左向右），将当前可见页的u重新映射到[0,1]的区间里<br>2.如果是B面（即观察方向和面的方向相反），将u做one minus取补。（例如[0,1]-&gt;[1,0]）<br>为方便比较，直接画出下面的表格<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.14_uv_stages.png" alt title="绿色代表当前显示页"><br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Switch left page or right page</span></span><br><span class="line"><span class="keyword">float</span> IsLeft = sign(overlap_face * dir);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Sampled texure color</span></span><br><span class="line">float4 sampled_color = IsLeft? tex2D(leftTex, overlap_uv):tex2D(rightTex, overlap_uv);</span><br><span class="line"><span class="comment">// Check if intersect uv is on the left(positive) side and in [0,1]</span></span><br><span class="line"><span class="keyword">float</span> current_page_mask = (</span><br><span class="line">    overlap_1st_uv.x &gt; <span class="number">0</span> &amp;&amp; overlap_1st_uv.x &lt; x_limit</span><br><span class="line">    &amp;&amp; overlap_1st_uv.y &gt; <span class="number">0</span> &amp;&amp; overlap_1st_uv.y &lt; <span class="number">1</span>) ? <span class="number">1</span>:<span class="number">0</span>;</span><br><span class="line">sampled_color = sampled_color * current_page_mask; <span class="comment">// Show only the current page</span></span><br><span class="line">sampled_color = float4(lerp(base_color.rgb, sampled_color.rgb, IsLeft), sampled_color.a);</span><br></pre></td></tr></table></figure></p>
+<p>完成这一步之后，我们就能将正确的uv绘制出来了。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/4.15_1st_stage_valid_uv.gif" alt title="这里画出了等高线方便debug"></p>
+<h1 id="自动曲率"><a href="#自动曲率" class="headerlink" title="自动曲率"></a>自动曲率</h1><p>我们在纸翻到一般，立于纸面的时候，希望曲率半径小一些（曲率大一些），而在靠近纸面处曲率半径大一些（曲率小一些）。我们可以绘制以下类似函数，从而实现动态自动调整弧度<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/page_curl/5.1_auto_curvature_graph.png" alt title><br>我使用的是上边红色的函数曲线，主要是多了一点小变化。如果要简化，用下面的函数也没问题。</p>
+<h1 id="添加活页扣"><a href="#添加活页扣" class="headerlink" title="添加活页扣"></a>添加活页扣</h1><p>为了让书本更有趣，有时候会想加上一个活页的结构。因为活页扣比纸面高，所以它的处理需要额外处理一下。不过因为我们前面已经取得了大部分的坐标信息。所以到这一步的时候，我们只用比价一下深度就能知道绘制次序了。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Ring-binder</span></span><br><span class="line"><span class="keyword">float</span> occlude_mask = saturate(sign(ring_height - T_z));</span><br><span class="line">float4 ring_color = tex2D(RingTex, ring_uv);</span><br><span class="line"></span><br><span class="line"><span class="keyword">float</span> opacity = max(base_color.a, sampled_color.a);</span><br><span class="line">float4 final_color = float4(</span><br><span class="line">    lerp(sampled_color.rgb, ring_color.rgb, ring_color.a * occlude_mask),</span><br><span class="line">    opacity);</span><br></pre></td></tr></table></figure></p>
+<p><span id="ref"></span></p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="http://wdnuon.blogspot.com/2010/05/implementing-ibooks-page-curling-using.html" target="_blank" rel="noopener">[1] Implementing iBooks page curling using a conical deformation algorithm</a><br><a href="http://www2.parc.com/istl/groups/uir/publications/items/UIR-2004-10-Hong-DeformingPages.pdf" target="_blank" rel="noopener">[2] Turning Pages of 3D Electronic Books [Lichan Hong et al. 2003]</a><br><a href="http://lousodrome.net/blog/light/2017/01/03/intersection-of-a-ray-and-a-cone" target="_blank" rel="noopener">[3] Intersection of a ray and a cone</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/game/" rel="tag"># game</a>
+          
+            <a href="/tags/graphics/" rel="tag"># graphics</a>
+          
+            <a href="/tags/shader/" rel="tag"># shader</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/03/28/vertex-split-operator/" rel="next" title="通过vertex split实现progressive mesh">
+                <i class="fa fa-chevron-left"></i> 通过vertex split实现progressive mesh
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/04/21/explanation-on-depth-in-unreal/" rel="prev" title="UE中的各种depth的解释及应用">
+                UE中的各种depth的解释及应用 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+    </div>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  
+  <aside id="sidebar" class="sidebar sidebar-hide">
+    
+      <div id="sidebar-dimmer"></div>
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <!--<li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>-->
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/avatar.png" alt="tasiYokan">
+          <p class="site-author-name" itemprop="name">tasiYokan</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">14</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#背景"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#利用光线追踪"><span class="nav-number">2.</span> <span class="nav-text">利用光线追踪</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#平板翻页"><span class="nav-number">3.</span> <span class="nav-text">平板翻页</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#增加一些弧度"><span class="nav-number">4.</span> <span class="nav-text">增加一些弧度</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#射线与圆柱相交测试"><span class="nav-number">4.1.</span> <span class="nav-text">射线与圆柱相交测试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#旋转圆柱体"><span class="nav-number">4.2.</span> <span class="nav-text">旋转圆柱体</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#处理AB面"><span class="nav-number">4.3.</span> <span class="nav-text">处理AB面</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#自动曲率"><span class="nav-number">5.</span> <span class="nav-text">自动曲率</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#添加活页扣"><span class="nav-number">6.</span> <span class="nav-text">添加活页扣</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考"><span class="nav-number">7.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">tasiYokan</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+      
+  <div class="expand-toc">
+    <i class="fa fa-list-ol"></i>
+    
+  </div>
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+</body>
+</html>

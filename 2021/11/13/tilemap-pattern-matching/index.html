@@ -1,0 +1,1243 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="game,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="背景最近在做一个地图生成的功能。其中有一个基础功能要先解决：在格子的地图上刷了相关的地形之后，如何根据实际的格子分布自动补全和更新边缘的形状，例如海滩的tile两面接山的情况下，就要有个弧形的边缘，而不是一条直的海岸线。这个功能在早期的2d的游戏中非常常见，因为当时的游戏都是tile-based的。 大概在3年前，unity还没有将2d-tilemap做成一个完整的包的时候，我自己写过一套。不过">
+<meta name="keywords" content="game">
+<meta property="og:type" content="article">
+<meta property="og:title" content="利用位运算进行Tilemap的快速模式匹配">
+<meta property="og:url" content="http://yoursite.com/2021/11/13/tilemap-pattern-matching/index.html">
+<meta property="og:site_name" content="不思議な箱">
+<meta property="og:description" content="背景最近在做一个地图生成的功能。其中有一个基础功能要先解决：在格子的地图上刷了相关的地形之后，如何根据实际的格子分布自动补全和更新边缘的形状，例如海滩的tile两面接山的情况下，就要有个弧形的边缘，而不是一条直的海岸线。这个功能在早期的2d的游戏中非常常见，因为当时的游戏都是tile-based的。 大概在3年前，unity还没有将2d-tilemap做成一个完整的包的时候，我自己写过一套。不过">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/tilemap-pattern-matching/2.4_tile-code-loop.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/tilemap-pattern-matching/0.1_advancedwar_editor.png">
+<meta property="og:image" content="https://connect-prd-cdn.unity.com/20201228/learn/images/8c3a789f-e96e-4fec-85c8-04e0f8d9006d_image7.png.2000x0x1.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/tilemap-pattern-matching/2.1_tilemap_overview.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/tilemap-pattern-matching/2.2_all_patterns_list.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/tilemap-pattern-matching/2.2_tile_rule.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/tilemap-pattern-matching/2.3_tile-code.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/tilemap-pattern-matching/2.4_tile-code-loop.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/tilemap-pattern-matching/3.1_code-rotate.png">
+<meta property="og:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/tilemap-pattern-matching/3.2_cyclic-shift.png">
+<meta property="og:updated_time" content="2021-11-16T14:04:46.478Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="利用位运算进行Tilemap的快速模式匹配">
+<meta name="twitter:description" content="背景最近在做一个地图生成的功能。其中有一个基础功能要先解决：在格子的地图上刷了相关的地形之后，如何根据实际的格子分布自动补全和更新边缘的形状，例如海滩的tile两面接山的情况下，就要有个弧形的边缘，而不是一条直的海岸线。这个功能在早期的2d的游戏中非常常见，因为当时的游戏都是tile-based的。 大概在3年前，unity还没有将2d-tilemap做成一个完整的包的时候，我自己写过一套。不过">
+<meta name="twitter:image" content="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/tilemap-pattern-matching/2.4_tile-code-loop.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"right","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false,"onmobile":true},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2021/11/13/tilemap-pattern-matching/">
+
+
+
+
+
+  <title>利用位运算进行Tilemap的快速模式匹配 | 不思議な箱</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">不思議な箱</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        <li class="menu-item menu-item-lang">
+          <a href="/en/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-language"></i> <br>
+            
+            中文 -> EN
+          </a>
+        </li>
+        
+      
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+        
+      
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+        
+      
+        
+        
+      
+      <!-- 
+      <li class="menu-item menu-item-home">
+        <a href="/" rel="section">
+          
+            <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+          
+          首页
+        </a>
+      </li> -->
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+
+  
+
+  <div class="site-author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" src="/images/avatar.png" alt="tasiYokan">
+    <p class="site-author-name" itemprop="name">tasiYokan</p>
+      
+        <p class="site-description motion-element" itemprop="description"></p>
+    
+  </div>
+
+  <nav class="site-state">
+    
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        <a href="/categories/index.html">
+          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        <a href="/tags/index.html">
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <p></p>
+
+  
+
+  
+
+
+</nav>
+
+
+<script type="text/javascript">
+    // Wait for the page to load first
+    var _prevOnload = window.onload;
+    var swithlang = function ()  {
+        // var switchLang = document.getElementById("menu").getElementsByClassName("menu-item-switch_lang")[0].childNodes[0];
+        var href = window.location.href;
+        var menu = document.getElementById("menu");
+        var switchLang = menu.getElementsByClassName("menu-item-lang")[0].getElementsByTagName("a")[0];
+
+        var indexOfEn = href.toLowerCase().indexOf('/en/');
+        if (indexOfEn !== -1) {
+            // console.log("switch to cn from "+ switchLang.href );
+            switchLang.href = href.replace('/en/', '/');
+        }
+        else {
+            // console.log("switch to en from " + switchLang.href );
+            switchLang.href = href.replace(/(^http[s]?:\/\/[a-z0-9.]*[:?0-9-]*[a-z0-9.]*\/)(.*)/i, '$1en/$2');
+        }
+        // console.log("href now is " + switchLang.href);
+    }
+
+    // Switch directly as the load may take a while
+    // swithlang();
+
+    window.onmousedown = function() {
+        swithlang();
+    }
+</script>
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <div class="post-inner">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/11/13/tilemap-pattern-matching/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="tasiYokan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="不思議な箱">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">利用位运算进行Tilemap的快速模式匹配</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2021-11-13T15:33:56+08:00">
+                2021-11-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Dev/" itemprop="url" rel="index">
+                    <span itemprop="name">Dev</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon">
+              <i class="fa fa-eye"></i>
+            </span>
+            
+              <span class="post-meta-item-text">浏览量</span>
+            
+            <span class="page-pv">
+              <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+         <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/tilemap-pattern-matching/2.4_tile-code-loop.png" alt title>
+<h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>最近在做一个地图生成的功能。其中有一个基础功能要先解决：在格子的地图上刷了相关的地形之后，如何根据实际的格子分布自动补全和更新边缘的形状，例如海滩的tile两面接山的情况下，就要有个弧形的边缘，而不是一条直的海岸线。这个功能在早期的2d的游戏中非常常见，因为当时的游戏都是tile-based的。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/tilemap-pattern-matching/0.1_advancedwar_editor.png" alt title="GBA版本的高级战争中甚至自带了一个地形绘制器"><br>大概在3年前，unity还没有将2d-tilemap做成一个完整的包的时候，我自己写过一套。不过因为年代过去的有点久了，代码不太找得到了。于是准备重新写一下，看看有没有新思路。而且现在Unity自己的tilemap系统也非常完善了，不如也参考一下。</p>
+<a id="more"></a>
+<h1 id="Unity的方案"><a href="#Unity的方案" class="headerlink" title="Unity的方案"></a>Unity的方案</h1><p>Unity的这套系统并不是包含在默认的tilemap package中的，而是放在tilemap <a href="https://github.com/Unity-Technologies/2d-extras" target="_blank" rel="noopener">2d-extras</a>项目中的，在<a href="https://github.com/Unity-Technologies/2d-extras/blob/master/Runtime/Tiles/RuleTile/RuleTile.cs" target="_blank" rel="noopener">RuleTile.cs</a>中包含了更新规则的实现。它支持为某一种地形建立一组rule，每个rule对应一种模式，根据每个格子周围的8格（或者15格）的分布情况来决定当前格子应该匹配哪一种规则。值得一提的是，它也支持旋转，镜像等方法进行模式匹配。即可以将多种分布情况映射到同一种tile上。<br><img src="https://connect-prd-cdn.unity.com/20201228/learn/images/8c3a789f-e96e-4fec-85c8-04e0f8d9006d_image7.png.2000x0x1.png" alt title="来源：[7]"></p>
+<ul>
+<li>绿色的箭头代表该格子内的tile需要格子中心处的tile为同一种</li>
+<li>红色的叉代表该格子内的tile需要格子中心处的tile为不同种</li>
+<li>如果没有标记，代表该格子内的tile无论是不是和中心tile一样都可以算作符合条件</li>
+</ul>
+<p>我简单看了一下源码，发现主要是朴素的匹配。即对于每个Rule，每个旋转和镜像的情况分别将分布情况匹配一遍。<br>对于旋转，每次都要应用一个旋转矩阵来进行偏移向量的变换<br><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">bool</span> <span class="title">RuleMatches</span>(<span class="params">TilingRule rule, Vector3Int position, ITilemap tilemap, <span class="keyword">int</span> angle</span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">var</span> minCount = Math.Min(rule.m_Neighbors.Count, rule.m_NeighborPositions.Count);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; minCount ; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">int</span> neighbor = rule.m_Neighbors[i];</span><br><span class="line">        Vector3Int positionOffset = GetRotatedPosition(rule.m_NeighborPositions[i], angle);</span><br><span class="line">        TileBase other = tilemap.GetTile(GetOffsetPosition(position, positionOffset));</span><br><span class="line">        <span class="keyword">if</span> (!RuleMatch(neighbor, other))</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这样的好处是代码简单易懂。但是问题就是更多的只是适合离线的编辑，因为每次要更新一个格子都需要做相当多的判断（更何况更多的时候，还需要更新周围相邻的格子）。</p>
+<p>而我们要做的功能涉及到地图的动态生成，对性能会有要求，于是想着能不能对其进行一个优化和精简。</p>
+<h1 id="利用编码"><a href="#利用编码" class="headerlink" title="利用编码"></a>利用编码</h1><p>虽然地形的拼接有很多种规则，对于大部分的地形来说，用下图所示的15种规则就能生成一个完整的地图。<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/tilemap-pattern-matching/2.1_tilemap_overview.png" alt title><br>并且这里我们不需要使用镜像，光靠旋转就能完成（代价是可能会多出一个模式）<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/tilemap-pattern-matching/2.2_all_patterns_list.png" alt title><br>有了这15中模式，我们需要找到一种方式将它表示出来以便后面进行模式匹配。</p>
+<p>对于模式匹配，我最喜欢的方式包含两个要素<br>1.<strong>将一个特征信息进行编码</strong>。编码的好处是能大幅缩小特征向量的大小，模式匹配的空间要求也下降。我们只需比较两个编码是否相同就能完成模式的匹配，通俗的说就是将原本逐个比较变成一次比较一个Integer。<br>2.<strong>找到一个快捷的方法能将编码进行变换。</strong>由于这里我们只用旋转就能解决所有的模式匹配，所以我们就只需要找到一种映射，可以将旋转映射为一种编码的变换。<br>还有一点就是如果能一次性编码完成，并直接匹配那更好，即相当于有一个O(N)的复杂度</p>
+<p>对于第一点，最简单的方法是为每一个相邻的格子分配一个二进制位，这样能保证它们各自的信息不重叠。由于一个格子的状态实际上有三种：和当前中心格相同，不同，或者无关。如果用三个状态来保存虽然直观，但是会要求更大的编码空间以及损失很多位运算的便利特性。所以我决定还是将“无关”这种情况用掩码mask来处理。<br>0:和当前中心的tile不同（对应前面图中的绿色箭头）<br>1:和当前中心的tile相同（对应前面图中的红色叉）<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/tilemap-pattern-matching/2.2_tile_rule.png" alt title></p>
+<p>第二就是我们应该如何决定每一格对应的二进制位的位置？<br>对于一个2d的旋转，其实就是将原来的坐标（偏移向量）乘以一个矩阵<br>$$<br>\begin{bmatrix}<br>cos(\theta) &amp; sin(\theta)\\<br>-sin(\theta) &amp; cos(\theta)<br>\end{bmatrix}<br>$$<br>因为每次都是旋转90°，所以就相当于每次把(x, y) -&gt; (-y, x)，这也是Unity中函数的内容。<br><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">virtual</span> Vector3Int <span class="title">GetRotatedPosition</span>(<span class="params">Vector3Int position, <span class="keyword">int</span> rotation</span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">switch</span> (rotation)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">0</span>:</span><br><span class="line">            <span class="keyword">return</span> position;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">90</span>:</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> Vector3Int(position.y, -position.x, <span class="number">0</span>);</span><br><span class="line">        <span class="keyword">case</span> <span class="number">180</span>:</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> Vector3Int(-position.x, -position.y, <span class="number">0</span>);</span><br><span class="line">        <span class="keyword">case</span> <span class="number">270</span>:</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> Vector3Int(-position.y, position.x, <span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> position;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>但是这样的变换不太适合编码。再仔细观察之后，我们可以重新打乱编码顺序，不再以平时的逐行编码的方式去为每个格子编码，而是按照旋转的顺序来编码<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/tilemap-pattern-matching/2.3_tile-code.png" alt title></p>
+<p>我定义了两个循环的圈，并将开头定在了右上角，并且旋转方向是顺时针。注意内外两个圈的编码需要分别放到高低4位上，避免数据污染<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/tilemap-pattern-matching/2.4_tile-code-loop.png" alt title><br>每当要将一个pattern顺时针旋转90°的时候，其实就是将对应位“左移”一位。<br>这样一来，就解决了我们前面所说的要求。但是这只是基本理论，还需要注意一下实现的细节</p>
+<p><em>到这里，前两点已经达成。但是复杂度稍微比O(N)大了一些:虽然免除了复杂的旋转矩阵，但是还是要进行旋转操作也即还带了一个常数级别的n。不过这篇文章里先不谈这个进一步的优化了。</em></p>
+<h1 id="实现细节"><a href="#实现细节" class="headerlink" title="实现细节"></a>实现细节</h1> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/tilemap-pattern-matching/3.1_code-rotate.png" alt title>
+<p>因为我们这个旋转操作是循环的，所以我们实际上做的不是“左移”位运算，而是一个包含高低各4位的编码的循环左移。<br>对于一般的循环左移，可以用公式<br>(x &lt;&lt; n) | (x &gt;&gt; (len - n)) 来表示。但是我们这里的循环左移是按高低位分别进行的，所以需要做一个mask来处理。<br>我们当然可以将高4位和低4位拆开来分别用循环位移来处理，但是我为了节省一步操作，就一起处理了。<br>高4位的mask实际上就是原本的11110000左移并截掉头部（这样做可以防止低4位因为左移而对高4位产生污染），同时再并上低四位的00001111（因为低4位左移的时候不需要担心右方的位左移进行污染）<br>同理，低4位的mask是原本的00001111右移（不再需要手工把末尾截取），同时再并上高4位的11110000（因为高4位右移的时候不需要担心左方的位右移进行干扰）<br> <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/tilemap-pattern-matching/3.2_cyclic-shift.png" alt title><br><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">RotateCode</span>(<span class="params"><span class="keyword">int</span> _code, <span class="keyword">int</span> _count</span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    _count %= <span class="number">4</span>;</span><br><span class="line">    <span class="keyword">int</span> highMask = <span class="number">240</span> &lt;&lt; _count &amp; <span class="number">255</span> | <span class="number">15</span>;</span><br><span class="line">    <span class="keyword">int</span> lowMask = <span class="number">15</span> &gt;&gt; (<span class="number">4</span> - _count) | <span class="number">240</span>;</span><br><span class="line">    <span class="keyword">return</span> (_code &lt;&lt; _count &amp; highMask) | (_code &gt;&gt; (<span class="number">4</span> - _count) &amp; lowMask);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>我们每次旋转之后得到一个新的编码，然后和模式编码进行异或操作，如果为0就说明新的编码和模式编码一致了。<br>对于前面提到的无论相同或者不同都可以满足条件的情况，我们只用对异或后的结果&amp;一个mask即可。<br>注意：我们直观上理解的时候，应该是旋转模式编码以和当前编码相对应，但是由于还有一个mask，旋转起来不方便。所以就反向旋转当前分布的编码<br>这里的返回值是指要旋转几次才能和模式编码相同，-1代表匹配失败<br><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">IsMatched</span>(<span class="params"><span class="keyword">int</span> _inputCode, <span class="keyword">int</span> _patternCode, <span class="keyword">int</span> _maskCode</span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> rotCnt = <span class="number">0</span>; rotCnt &lt; <span class="number">4</span>; ++rotCnt)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">int</span> curCode = RotateCode(inputCode, rotCnt);</span><br><span class="line">        <span class="keyword">if</span> (((curCode ^ _patternCode) &amp; _maskCode) == <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">return</span> rotCnt;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>我们要判断某一格的话，就依次和15个模式编码对比一下，找到匹配的就可以了。这里返回用的是个二维向量，第一个是表示是第几个模式tile，第二个是代表旋转了几次<br><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> Vector2Int <span class="title">GetMatchedTile</span>(<span class="params">Vector2Int _pos</span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> inputCode = GetCodeAt(_pos);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">15</span>; ++i)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">int</span> resultCnt = IsMatched(inputCode, patternCodes[i], maskCodes[i]);</span><br><span class="line">        <span class="keyword">if</span> (resultCnt &gt;= <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> Vector2Int(i, resultCnt);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> Vector2Int(<span class="number">-1</span>, <span class="number">-1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这里主要用3个函数就完成了原本几百行的比较代码，而且性能上也会更快。感觉也许还有更快的位运算的规律可以挖，此文也只是抛砖引玉。</p>
+<p>我依稀记得我之前的做法是根据周围格子直接对当前分布进行编码，即在某个方向上的格子会直接将影响应用到编码上，这样会速度更快(即更接近O(N))，但是边界情况比较多，处理起来如果不小心容易写出bug，可读性也会低一些。不过还是看项目具体需求，如果需要更快的性能，可以考虑一次遍历即得到编码的方式</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/game/" rel="tag"># game</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/10/07/fake-3d-ui/" rel="next" title="在屏幕空间下制作3D UI">
+                <i class="fa fa-chevron-left"></i> 在屏幕空间下制作3D UI
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+    </div>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  
+  <aside id="sidebar" class="sidebar sidebar-hide">
+    
+      <div id="sidebar-dimmer"></div>
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <!--<li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>-->
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/avatar.png" alt="tasiYokan">
+          <p class="site-author-name" itemprop="name">tasiYokan</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">14</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#背景"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Unity的方案"><span class="nav-number">2.</span> <span class="nav-text">Unity的方案</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#利用编码"><span class="nav-number">3.</span> <span class="nav-text">利用编码</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#实现细节"><span class="nav-number">4.</span> <span class="nav-text">实现细节</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">tasiYokan</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+      
+  <div class="expand-toc">
+    <i class="fa fa-list-ol"></i>
+    
+  </div>
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+</body>
+</html>
