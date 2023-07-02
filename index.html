@@ -296,7 +296,7 @@
     
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-count">15</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -373,6 +373,125 @@
           <div id="content" class="content">
             
   <section id="posts" class="posts-expand">
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <div class="post-inner">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2023/05/28/volume-rendering-in-unreal/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="tasiYokan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="不思議な箱">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2023/05/28/volume-rendering-in-unreal/" itemprop="url">UE中实现体积渲染</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2023-05-28T11:28:53+08:00">
+                2023-05-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <img src="https://imgs-1259535704.cos.ap-guangzhou.myqcloud.com/blog/volume-rendering-in-unreal/0-volume_rendering_cover.png" alt title>
+<h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>本文讨论了如何在Unreal 5.1中进行体积材质的渲染。材质中利用RayMarching进行体积纹理渲染，但为了解决传统的以像素为对象的两次ray marching（一次从相机到voxel，另一次是从voxel到光源）带来的巨大性能开销，使用niagara每帧预先对光照信息进行烘焙，从而能在材质中更快的计算光照强度。同时在本文的最后，也通过修改UE中的Vdb插件<a href="https://github.com/eidosmontreal/unreal-vdb" target="_blank" rel="noopener">[1]</a>来得到对vdb sequence的直接支持<br>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2023/05/28/volume-rendering-in-unreal/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </p></div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+    </div>
+  </article>
+
+
     
       
 
@@ -1642,147 +1761,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <div class="post-inner">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/07/weekly-animation-share-vol-1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="tasiYokan">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.png">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="不思議な箱">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/09/07/weekly-animation-share-vol-1/" itemprop="url">Weekly Animation Share Vol.1</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-09-07T23:18:52+08:00">
-                2019-09-07
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Motion/" itemprop="url" rel="index">
-                    <span itemprop="name">Motion</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>作为第一期的每周动画分享（会有几期也不知道…），先简单介绍下做这个系列的动机。之前经常会逛<a href="http://animetaste.net/" target="_blank" rel="noopener">AT! 品赏阿尼墨</a>，通过这个平台看到过不少优秀的作品。但因为网站已经很久没更新了，而如今的动画公众号也缺少一些独立短片的推荐，所以出于个人兴趣爱好，决定（不）定期的更新一些自己发现的有意思的动画短片。这次的三个视频都来自vimeo，由于被墙了，所以国内小伙伴可能看起来不太方便，目前只好提供截图封面，后面我会思考下如何解决这个问题…</p>
-<h1 id="CAT-DAYS-ねこのひ"><a href="#CAT-DAYS-ねこのひ" class="headerlink" title="CAT DAYS / ねこのひ"></a>CAT DAYS / ねこのひ</h1>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2019/09/07/weekly-animation-share-vol-1/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-    </div>
-  </article>
-
-
-    
   </section>
 
   
@@ -1820,7 +1798,7 @@
         <div class="copyright">
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2023</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
